@@ -129,7 +129,9 @@ async def next_page(bot, query):
                 InlineKeyboardButton("NEXT ▶️", callback_data=f"next_{req}_{key}_{n_offset}")
             ]
         )
-
+# 👇 INTHA LINE AH INGA ADD PANNUNGA 👇
+    btn.append([InlineKeyboardButton("How to Link Download 📥", url="https://t.me/howtoo1/3")])
+    # 👆 MELA IRUKKURATHA ADD PANNUNGA 👆
     try:
         if HYPER_MODE:
             await query.edit_message_text(
@@ -737,7 +739,11 @@ async def auto_filter(client, msg, spoll=False):
             ])
         else:
             btn.append([InlineKeyboardButton(text="📃 1/1", callback_data="pages")])
-
+            
+# 👇 INTHA LINE AH INGA ADD PANNUNGA 👇
+    btn.append([InlineKeyboardButton("How to Link Download 📥", url="https://t.me/howtoo1/3")])
+    # 👆 MELA IRUKKURATHA ADD PANNUNGA 👆
+    
     imdb = await get_poster(search, file=(files[0]).file_name) if settings["imdb"] else None
     TEMPLATE = settings['template']
     if imdb:
