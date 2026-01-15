@@ -18,6 +18,8 @@ import base64
 logger = logging.getLogger(__name__)
 from info import IS_VERIFY
 from utils import get_verify_link, check_verification
+from database.ia_filterdb import get_file_details
+from utils import get_size
 
 BATCH_FILES = {}
 
@@ -263,23 +265,52 @@ async def start(client, message):
         await auto_filter(client, message) 
         return
     data = message.command[1]
-# 👇👇 INGA PASTE PANNUNGA 👇👇
     
+# 👇👇 PUTHU UPDATED VERIFY CODE 👇👇
+
     if IS_VERIFY:
         if not await check_verification(client, message.from_user.id):
             verify_url = await get_verify_link(message.from_user.id)
+            
+            # --- FILE DETAILS EDUKKURA CODE ---
+            file_name = "Requested File"
+            file_size = ""
+            try:
+                # Data la irunthu File ID edukkurom
+                if "_" in data:
+                    try:
+                        _, file_id = data.split('_', 1)
+                    except:
+                        file_id = data
+                else:
+                    file_id = data
+
+                # Database la file details edukkurom
+                files_ = await get_file_details(file_id)
+                if files_:
+                    file_name = files_[0].file_name
+                    file_size = get_size(files_[0].file_size)
+            except Exception as e:
+                print(f"Error getting file details: {e}")
+            # ----------------------------------
+
             buttons = [
                 [InlineKeyboardButton("Click Here To Verify 🟢", url=verify_url)],
-                [InlineKeyboardButton("How to Download 📥", url="https://t.me/unga_video_link")] # Link change pannunga
+                [InlineKeyboardButton("How to Download 📥", url="https://t.me/howtoo1/3")]
             ]
+            
+            # Inga thaan Message Text-a maathurom
             await message.reply_text(
-                text="<b>⚠️ நீங்க இன்னும் Verify பண்ணல!\n\nகீழே உள்ள பட்டனை கிளிக் செய்து Verify பண்ணுங்க. அப்போதான் ஃபைல் வரும்.</b>",
+                text=f"<b>⚠️ நீங்க இன்னும் Verify பண்ணல!</b>\n\n"
+                     f"<b>📂 File:</b> {file_name}\n"
+                     f"<b>💾 Size:</b> {file_size}\n\n"
+                     f"<i>கீழே உள்ள பட்டனை கிளிக் செய்து Verify பண்ணுங்க. அப்போதான் ஃபைல் வரும்.</i>",
                 reply_markup=InlineKeyboardMarkup(buttons),
                 protect_content=True
             )
             return
 
-    # 👆👆 ITHODU MUDIYUTHU 👆👆
+    # 👆👆 UPDATE MUDINJATHU 👆👆
     
     try:
         pre, file_id = data.split('_', 1)
