@@ -16,6 +16,8 @@ import json
 from pyrogram.types import Message
 import base64
 logger = logging.getLogger(__name__)
+from info import IS_VERIFY
+from utils import get_verify_link, check_verification
 
 BATCH_FILES = {}
 
