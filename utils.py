@@ -451,7 +451,7 @@ async def get_short(link):
 async def get_verify_link(user_id):
     try:
         # Unga bot username-a inga 'YourBotUserName' kku pathila podunga, illana generic link create aagum
-        link = f"https://telegram.me/Share_4_u_Bot?start=verify_{user_id}" 
+        link = f"https://telegram.me/Mikasa_Lovely_bot?start=verify_{user_id}" 
         
         # Shortener API call
         api_url = f"https://{SHORTLINK_URL}/api?api={SHORTLINK_API}&url={link}&format=text"
