@@ -11,6 +11,9 @@ Currently using free server so please Dont kill Me...
 ◎ Lᴀɴɢᴜᴀɢᴇ: Pʏᴛʜᴏɴ 3
 ◎ Dᴀᴛᴀ Bᴀsᴇ: Mᴏɴɢᴏ DB
 ◎ Bᴏᴛ Sᴇʀᴠᴇʀ: KoYeb</b>"""
+    SOURCE_TXT = """<b>NOTE:</b>
+- Shobana Filter Bot  is a open source project. 
+- Source - <ahref=https://t.me/Goku_Stark>Click Here to get source code</a>
 
 <b>DEVS:</b>
 -<a href=https://t.me/Goku_Stark> Click Here</a>"""
