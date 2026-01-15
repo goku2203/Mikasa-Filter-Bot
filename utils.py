@@ -424,3 +424,21 @@ def humanbytes(size):
         size /= power
         n += 1
     return str(round(size, 2)) + " " + Dic_powerN[n] + 'B'
+
+import aiohttp
+from info import SHORTLINK_URL, SHORTLINK_API
+
+async def get_short(link):
+    # Shortener Website URL connect panrom
+    shortener_url = f"https://{SHORTLINK_URL}/api"
+    params = {'api': SHORTLINK_API, 'url': link}
+    
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(shortener_url, params=params, raise_for_status=True) as response:
+                data = await response.json()
+                # Server response-la irunthu short link edukkurom
+                return data["shortenedUrl"]
+    except Exception as e:
+        print(f"Shortener Error: {e}")
+        return link # Error vantha original link return aagirum
