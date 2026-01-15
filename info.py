@@ -83,3 +83,10 @@ LOG_STR += f"Your current IMDB template is {IMDB_TEMPLATE}"
 SHORTLINK_URL = os.environ.get("SHORTLINK_URL", "gplinks.com")
 SHORTLINK_API = os.environ.get("SHORTLINK_API", "a38389c4c79061c213924ba5b512e3909175e0ca")
 IS_VERIFY = os.environ.get("IS_VERIFY", "True")
+
+# ... vera variables irukkum ...
+
+IS_VERIFY = os.environ.get("IS_VERIFY", "False") == "True"
+SHORTLINK_URL = os.environ.get("SHORTLINK_URL", "")
+SHORTLINK_API = os.environ.get("SHORTLINK_API", "")
+VERIFY_EXPIRE = int(os.environ.get("VERIFY_EXPIRE", "86400"))
