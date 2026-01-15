@@ -263,6 +263,24 @@ async def start(client, message):
         await auto_filter(client, message) 
         return
     data = message.command[1]
+# 👇👇 INGA PASTE PANNUNGA 👇👇
+    
+    if IS_VERIFY:
+        if not await check_verification(client, message.from_user.id):
+            verify_url = await get_verify_link(message.from_user.id)
+            buttons = [
+                [InlineKeyboardButton("Click Here To Verify 🟢", url=verify_url)],
+                [InlineKeyboardButton("How to Download 📥", url="https://t.me/unga_video_link")] # Link change pannunga
+            ]
+            await message.reply_text(
+                text="<b>⚠️ நீங்க இன்னும் Verify பண்ணல!\n\nகீழே உள்ள பட்டனை கிளிக் செய்து Verify பண்ணுங்க. அப்போதான் ஃபைல் வரும்.</b>",
+                reply_markup=InlineKeyboardMarkup(buttons),
+                protect_content=True
+            )
+            return
+
+    # 👆👆 ITHODU MUDIYUTHU 👆👆
+    
     try:
         pre, file_id = data.split('_', 1)
     except:
