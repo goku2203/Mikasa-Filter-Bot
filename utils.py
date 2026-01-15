@@ -16,6 +16,9 @@ from typing import List
 from database.users_chats_db import db
 from bs4 import BeautifulSoup
 import requests
+from info import VERIFY_EXPIRE, IS_VERIFY, SHORTLINK_URL, SHORTLINK_API
+import aiohttp
+import time
 
 #  @MrMNTG @MusammilN
 #please give credits https://github.com/MN-BOTS/ShobanaFilterBot
@@ -442,3 +445,46 @@ async def get_short(link):
     except Exception as e:
         print(f"Shortener Error: {e}")
         return link # Error vantha original link return aagirum
+
+# ----- VERIFY FUNCTIONS START -----
+
+async def get_verify_link(user_id):
+    try:
+        # Unga bot username-a inga 'YourBotUserName' kku pathila podunga, illana generic link create aagum
+        link = f"https://telegram.me/Share_4_u_Bot?start=verify_{user_id}" 
+        
+        # Shortener API call
+        api_url = f"https://{SHORTLINK_URL}/api?api={SHORTLINK_API}&url={link}&format=text"
+        
+        async with aiohttp.ClientSession() as session:
+            async with session.get(api_url) as response:
+                if response.status == 200:
+                    data = await response.text()
+                    return data
+                else:
+                    return link # Error vandha normal link tharum
+    except Exception as e:
+        print(f"Error in get_verify_link: {e}")
+        return link
+
+async def check_verification(client, user_id):
+    if not IS_VERIFY:
+        return True
+        
+    # Database la user verify pannitangala nu check panra logic
+    # Neenga use panra Database (db) poruthu ithu maarum.
+    # Ithu oru Basic Logic:
+    
+    try:
+        user = await client.get_users(user_id)
+        # Inga unga database verification check irukkanum. 
+        # Example: await db.check_verification(user_id)
+        # Ippo thakku "True" nu return panren, error vara koodathu nu.
+        
+        # Neenga 'tutorial' kaga verification vacha, 
+        # unmai verify logic 'database/users_chats_db.py' la ezhuthanum.
+        return False # Ippa testing-ku False nu vekkuren, appo thaan Verify Button varum.
+    except:
+        return False
+
+# ----- VERIFY FUNCTIONS END -----
