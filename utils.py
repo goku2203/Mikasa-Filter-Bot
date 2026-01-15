@@ -19,6 +19,8 @@ import requests
 from info import VERIFY_EXPIRE, IS_VERIFY, SHORTLINK_URL, SHORTLINK_API
 import aiohttp
 import time
+from database.users_chats_db import db
+from datetime import datetime, timedelta
 
 #  @MrMNTG @MusammilN
 #please give credits https://github.com/MN-BOTS/ShobanaFilterBot
@@ -446,45 +448,42 @@ async def get_short(link):
         print(f"Shortener Error: {e}")
         return link # Error vantha original link return aagirum
 
-# ----- VERIFY FUNCTIONS START -----
+# ----- START OF NEW UTILS CODE -----
 
 async def get_verify_link(user_id):
+    # Link creating
+    link = f"https://telegram.me/Share_4_u_Bot?start=verify_{user_id}" 
+    api_url = f"https://{SHORTLINK_URL}/api?api={SHORTLINK_API}&url={link}&format=text"
+    
     try:
-        # Unga bot username-a inga 'YourBotUserName' kku pathila podunga, illana generic link create aagum
-        link = f"https://telegram.me/Mikasa_Lovely_bot?start=verify_{user_id}" 
-        
-        # Shortener API call
-        api_url = f"https://{SHORTLINK_URL}/api?api={SHORTLINK_API}&url={link}&format=text"
-        
         async with aiohttp.ClientSession() as session:
             async with session.get(api_url) as response:
                 if response.status == 200:
-                    data = await response.text()
-                    return data
+                    return await response.text()
                 else:
-                    return link # Error vandha normal link tharum
-    except Exception as e:
-        print(f"Error in get_verify_link: {e}")
+                    return link
+    except:
         return link
 
-async def check_verification(client, user_id):
-    if not IS_VERIFY:
-        return True
-        
-    # Database la user verify pannitangala nu check panra logic
-    # Neenga use panra Database (db) poruthu ithu maarum.
-    # Ithu oru Basic Logic:
-    
-    try:
-        user = await client.get_users(user_id)
-        # Inga unga database verification check irukkanum. 
-        # Example: await db.check_verification(user_id)
-        # Ippo thakku "True" nu return panren, error vara koodathu nu.
-        
-        # Neenga 'tutorial' kaga verification vacha, 
-        # unmai verify logic 'database/users_chats_db.py' la ezhuthanum.
-        return False # Ippa testing-ku False nu vekkuren, appo thaan Verify Button varum.
-    except:
-        return False
+async def verify_user(user_id):
+    # 24 Hours validity set panrom
+    expiry = datetime.now() + timedelta(seconds=86400)
+    # Database-la update panrom
+    await db.col.update_one({'id': user_id}, {'$set': {'verify_status': {'is_verified': True, 'verify_until': expiry}}}, upsert=True)
 
-# ----- VERIFY FUNCTIONS END -----
+async def check_verification(client, user_id):
+    if not IS_VERIFY: return True
+    
+    # Database-la check panrom
+    user = await db.col.find_one({'id': user_id})
+    if not user: return False
+    
+    verify_status = user.get('verify_status', {})
+    expiry = verify_status.get('verify_until')
+    
+    if expiry and datetime.now() < expiry:
+        return True # Time mudiyala, so Verified
+    
+    return False # Time mudinjuruchu
+
+# ----- END OF NEW UTILS CODE -----
