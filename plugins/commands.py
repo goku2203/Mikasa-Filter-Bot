@@ -208,7 +208,7 @@ async def start(client, message):
             InlineKeyboardButton('Request', url='https://t.me/Tamilmovieslink_bot')
          ]]
         reply_markup = InlineKeyboardMarkup(buttons)
-        m=await message.reply_text("ShobanaFilterBot") 
+        m=await message.reply_text("⚡️ Welcome to My Bot... BY TAMIL TECH GK") 
         await asyncio.sleep(1.2)
         await m.delete()
         await message.reply_photo(
@@ -246,9 +246,7 @@ async def start(client, message):
         ],[
              InlineKeyboardButton(f'Anime Channel​', url='https://t.me/Anime_single'),
              InlineKeyboardButton(f'ᴍᴀɪɴ ᴄʜᴀɴɴᴇʟ', url='https://t.me/goku_stark')
-        ],[
-            InlineKeyboardButton('ʀᴇᴘᴏ', url='https://github.com/mn-bots/ShobanaFilterBot')
-         ]]
+        ]]
         reply_markup = InlineKeyboardMarkup(buttons)
         await message.reply_photo(
             photo=random.choice(PICS),
