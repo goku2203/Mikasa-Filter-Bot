@@ -8,26 +8,19 @@ from pyrogram.errors import ChatAdminRequired, FloodWait
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from database.ia_filterdb import Media, get_file_details, unpack_new_file_id
 from database.users_chats_db import db
-from info import CHANNELS, ADMINS, LOG_CHANNEL, PICS, BATCH_FILE_CAPTION, CUSTOM_FILE_CAPTION, PROTECT_CONTENT, FILE_CHANNELS, FILE_CHANNEL_SENDING_MODE, FILE_AUTO_DELETE_SECONDS
-from utils import get_settings, get_size, is_subscribed, save_group_settings, temp, create_invite_links
+from info import CHANNELS, ADMINS, LOG_CHANNEL, PICS, BATCH_FILE_CAPTION, CUSTOM_FILE_CAPTION, PROTECT_CONTENT, FILE_CHANNELS, FILE_CHANNEL_SENDING_MODE, FILE_AUTO_DELETE_SECONDS, IS_VERIFY
+from utils import get_settings, get_size, is_subscribed, save_group_settings, temp, create_invite_links, get_verify_link, check_verification, verify_user
 from database.connections_mdb import active_connection
 import re
 import json
 from pyrogram.types import Message
 import base64
+from datetime import datetime, timedelta
+
 logger = logging.getLogger(__name__)
-from info import IS_VERIFY
-from utils import get_verify_link, check_verification
-from database.ia_filterdb import get_file_details
-from utils import get_size
 
 BATCH_FILES = {}
-
-# Add these imports at the top of your file
-from datetime import datetime, timedelta
-import random
-
-AUTO_DELETE_SECONDS = 15  
+AUTO_DELETE_SECONDS = 15
 
 # Helper function to create buttons for specific channel
 async def create_file_buttons(client, sent_message):
@@ -189,7 +182,7 @@ async def start(client, message):
         await asyncio.sleep(2)
         if not await db.get_chat(message.chat.id):
             total=await client.get_chat_members_count(message.chat.id)
-            await client.send_message(LOG_CHANNEL, script.LOG_TEXT_G.format(message.chat.title, message.chat.id, total, "Unknown"))       
+            await client.send_message(LOG_CHANNEL, script.LOG_TEXT_G.format(message.chat.title, message.chat.id, total, "Unknown"))        
             await db.add_chat(message.chat.id, message.chat.title)
         return 
     if not await db.is_user_exist(message.from_user.id):
@@ -262,10 +255,29 @@ async def start(client, message):
         message.text = search 
         await auto_filter(client, message) 
         return
-    data = message.command[1]
-    
-# 👇👇 PUTHU UPDATED VERIFY CODE 👇👇
 
+    # 👇👇 VERIFY SUCCESS CODE 👇👇
+    if len(message.command) == 2 and message.command[1].startswith('verify_'):
+        try:
+            check_id = message.command[1].split("_", 1)[1]
+            if str(message.from_user.id) == check_id:
+                await verify_user(message.from_user.id)
+                await message.reply_text(
+                    "<b>✅ Verification Successful!</b>\n\nஇனிமேல் 24 மணிநேரத்திற்கு நீங்க Direct-ஆக ஃபைல்களை டவுன்லோட் செய்யலாம்.",
+                    protect_content=True
+                )
+                return
+            else:
+                await message.reply_text("❌ Invalid Verification Link!")
+                return
+        except Exception as e:
+            print(e)
+            return
+    # 👆👆 ITHODU MUDIYUTHU 👆👆
+
+    data = message.command[1]
+
+    # 👇👇 VERIFY CHECK CODE 👇👇
     if IS_VERIFY:
         if not await check_verification(client, message.from_user.id):
             verify_url = await get_verify_link(message.from_user.id)
@@ -294,10 +306,9 @@ async def start(client, message):
 
             buttons = [
                 [InlineKeyboardButton("Click Here To Verify 🟢", url=verify_url)],
-                [InlineKeyboardButton("How to Download 📥", url="https://t.me/howtoo1/3")]
+                [InlineKeyboardButton("How to Download 📥", url="https://t.me/howtoo1/3")] # Check this link
             ]
             
-            # Inga thaan Message Text-a maathurom
             await message.reply_text(
                 text=f"<b>⚠️ நீங்க இன்னும் Verify பண்ணல!</b>\n\n"
                      f"<b>📂 File:</b> {file_name}\n"
@@ -307,7 +318,6 @@ async def start(client, message):
                 protect_content=True
             )
             return
-
     # 👆👆 UPDATE MUDINJATHU 👆👆
     
     try:
@@ -409,7 +419,7 @@ async def start(client, message):
         return await sts.delete()
         
 
-    files_ = await get_file_details(file_id)           
+    files_ = await get_file_details(file_id)            
     if not files_:
         pre, file_id = ((base64.urlsafe_b64decode(data + "=" * (-len(data) % 4))).decode("ascii")).split("_", 1)
         try:
@@ -477,7 +487,7 @@ async def set_auth_channels(client, message: Message):
 
 @Client.on_message(filters.command('channel') & filters.user(ADMINS))
 async def channel_info(bot, message):
-           
+            
     """Send basic information of channel"""
     if isinstance(CHANNELS, (int, str)):
         channels = [CHANNELS]
