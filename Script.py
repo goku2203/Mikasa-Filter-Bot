@@ -12,7 +12,7 @@ Currently using free server so please Dont kill Me...
 ◎ Dᴀᴛᴀ Bᴀsᴇ: Mᴏɴɢᴏ DB
 ◎ Bᴏᴛ Sᴇʀᴠᴇʀ: KoYeb</b>"""
     SOURCE_TXT = """<b>NOTE:</b>
-- Shobana Filter Bot  is a open source project. 
+- Mikasa Filter Bot  is a open source project. 
 - Source - <ahref=https://t.me/Goku_Stark>Click Here to get source code</a>
 
 <b>DEVS:</b>
