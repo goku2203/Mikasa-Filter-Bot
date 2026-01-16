@@ -70,6 +70,8 @@ async def auto_delete_file(client, message, delay):
     except Exception as e:
         logger.error(f"Error deleting file: {e}")
 
+# 👇👇 UPDATED FUNCTION WITH 2 MIN AUTO DELETE 👇👇
+
 async def send_file_to_user(client, user_id, file_id, protect_content_flag, file_name=None, file_size=None, file_caption=None):
     try:
         # Generate proper caption
@@ -87,8 +89,9 @@ async def send_file_to_user(client, user_id, file_id, protect_content_flag, file
         else:
             caption = file_caption if file_caption else file_name
 
-        # File sending logic with channel support
+        # File sending logic
         if FILE_CHANNEL_SENDING_MODE and FILE_CHANNELS:
+            # Channel sending logic (Already unga code la irukura maari)
             channel_id = random.choice(FILE_CHANNELS)
             sent_message = await client.send_cached_media(
                 chat_id=channel_id,
@@ -99,10 +102,8 @@ async def send_file_to_user(client, user_id, file_id, protect_content_flag, file
             # Schedule auto-delete for channel file
             asyncio.create_task(auto_delete_file(client, sent_message, FILE_AUTO_DELETE_SECONDS))
             
-            # Create channel-specific buttons
             reply_markup = await create_file_buttons(client, sent_message)
             
-            # Notify user with auto-delete
             user_msg = await client.send_message(
                 chat_id=user_id,
                 text=f"**Your file is ready!**\n\nJoin the channel to view your file ",
@@ -111,22 +112,31 @@ async def send_file_to_user(client, user_id, file_id, protect_content_flag, file
             )
             asyncio.create_task(auto_delete_message(client, user_msg, AUTO_DELETE_SECONDS))
         else:
+            # 👇 INGA THAAN CHANGE PANNI IRUKKEN 👇
             # Fallback to direct send with caption
-            await client.send_cached_media(
+            msg = await client.send_cached_media(
                 chat_id=user_id,
                 file_id=file_id,
                 caption=caption,
                 protect_content=protect_content_flag,
             )
+            
+            # 2 Minutes (120 Seconds) Auto Delete Task Add Panniachu
+            # Ithu Automatic-a antha file-a delete pannidum.
+            asyncio.create_task(auto_delete_file(client, msg, 120)) 
+            
     except Exception as e:
         logger.error(f"File send error: {e}")
-        # Fallback to direct send if channel send fails
-        await client.send_cached_media(
+        # Error handling la yum auto delete add panrom
+        msg = await client.send_cached_media(
             chat_id=user_id,
             file_id=file_id,
             caption=caption,
             protect_content=protect_content_flag,
         )
+        asyncio.create_task(auto_delete_file(client, msg, 120))
+
+# 👆👆 UPDATE MUDINJATHU 👆👆
 
 @Client.on_callback_query(filters.regex(r'^checksubp#') | filters.regex(r'^checksub#'))
 async def checksub_callback(client, callback_query):
