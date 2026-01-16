@@ -472,9 +472,11 @@ async def get_verify_link(user_id, file_id=None):
         return link
 
 async def verify_user(user_id):
-    # 24 Hours validity set panrom
-    expiry = datetime.now() + timedelta(seconds=86400)
-    # Database-la update panrom
+    # 24 Hours (86400) ku pathila 2 minutes (120 seconds) vekkurom.
+    # Ippadi panna, User verify panni 2 nimishathula expiry aagirum. 
+    # Adutha file edukum pothu thirumba verify ketkum.
+    expiry = datetime.now() + timedelta(seconds=120)
+    
     await db.col.update_one({'id': user_id}, {'$set': {'verify_status': {'is_verified': True, 'verify_until': expiry}}}, upsert=True)
 
 async def check_verification(client, user_id):
