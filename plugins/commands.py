@@ -171,12 +171,12 @@ async def checksub_callback(client, callback_query):
 async def start(client, message):
     if message.chat.type in [enums.ChatType.GROUP, enums.ChatType.SUPERGROUP]:
         buttons = [
-              [
-                  InlineKeyboardButton(f'Anime Channel​', url='https://t.me/Anime_single'),
-                  InlineKeyboardButton(f'ᴍᴀɪɴ ᴄʜᴀɴɴᴇʟ', url='https://t.me/goku_stark'),
-                  InlineKeyboardButton('Request', url='https://t.me/Tamilmovieslink_bot')
-         ]
+            [
+                InlineKeyboardButton(f'Anime Channel​', url='https://t.me/Anime_single'),
+                InlineKeyboardButton(f'ᴍᴀɪɴ ᴄʜᴀɴɴᴇʟ', url='https://t.me/goku_stark'),
+                InlineKeyboardButton('Request', url='https://t.me/Tamilmovieslink_bot')
             ]
+        ]
         reply_markup = InlineKeyboardMarkup(buttons)
         await message.reply(script.START_TXT.format(message.from_user.mention if message.from_user else message.chat.title, temp.U_NAME, temp.B_NAME), reply_markup=reply_markup)
         await asyncio.sleep(2)
@@ -185,9 +185,11 @@ async def start(client, message):
             await client.send_message(LOG_CHANNEL, script.LOG_TEXT_G.format(message.chat.title, message.chat.id, total, "Unknown"))        
             await db.add_chat(message.chat.id, message.chat.title)
         return 
+
     if not await db.is_user_exist(message.from_user.id):
         await db.add_user(message.from_user.id, message.from_user.first_name)
         await client.send_message(LOG_CHANNEL, script.LOG_TEXT_P.format(message.from_user.id, message.from_user.mention))
+
     if len(message.command) != 2:
         buttons = [[
             InlineKeyboardButton('ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘs', url=f'http://t.me/{temp.U_NAME}?startgroup=true')
@@ -211,10 +213,10 @@ async def start(client, message):
             parse_mode=enums.ParseMode.HTML
         )
         return
+
     if not await is_subscribed(message.from_user.id, client):
         links = await create_invite_links(client)
         btn = [[InlineKeyboardButton("🤖 Join Updates Channel", url=url)] for url in links.values()]
-
         if len(message.command) == 2:
             try:
                 kk, file_id = message.command[1].split("_", 1)
@@ -230,23 +232,12 @@ async def start(client, message):
             parse_mode=enums.ParseMode.MARKDOWN
         )
         return
+
     if len(message.command) == 2 and message.command[1] in ["subscribe", "error", "okay", "help"]:
-        buttons = [[
-            InlineKeyboardButton('ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘs', url=f'http://t.me/{temp.U_NAME}?startgroup=true')
-            ],[
-            InlineKeyboardButton('ʜᴇʟᴘ', callback_data='help'),
-            InlineKeyboardButton('ᴀʙᴏᴜᴛ', callback_data='about')
-        ],[
-             InlineKeyboardButton(f'Anime Channel​', url='https://t.me/Anime_single'),
-             InlineKeyboardButton(f'ᴍᴀɪɴ ᴄʜᴀɴɴᴇʟ', url='https://t.me/goku_stark')
-        ]]
+        # (Help logic same as above, omitted for brevity but keeping return)
+        buttons = [[InlineKeyboardButton('ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘs', url=f'http://t.me/{temp.U_NAME}?startgroup=true')],[InlineKeyboardButton('ʜᴇʟᴘ', callback_data='help'),InlineKeyboardButton('ᴀʙᴏᴜᴛ', callback_data='about')],[InlineKeyboardButton(f'Anime Channel​', url='https://t.me/Anime_single'),InlineKeyboardButton(f'ᴍᴀɪɴ ᴄʜᴀɴɴᴇʟ', url='https://t.me/goku_stark')]]
         reply_markup = InlineKeyboardMarkup(buttons)
-        await message.reply_photo(
-            photo=random.choice(PICS),
-            caption=script.START_TXT.format(message.from_user.mention, temp.U_NAME, temp.B_NAME),
-            reply_markup=reply_markup,
-            parse_mode=enums.ParseMode.HTML
-        )
+        await message.reply_photo(photo=random.choice(PICS), caption=script.START_TXT.format(message.from_user.mention, temp.U_NAME, temp.B_NAME), reply_markup=reply_markup, parse_mode=enums.ParseMode.HTML)
         return
     
     if len(message.command) == 2 and message.command[1].startswith('mntgx'):
@@ -256,27 +247,23 @@ async def start(client, message):
         await auto_filter(client, message) 
         return
 
-    # 👇 CHANGE 1: AUTO FILE SEND LOGIC (Paste at top of start function) 👇
-    
+    # ==================================================================
+    # 👇👇 VERIFY & AUTO SEND LOGIC (Updated) 👇👇
+    # ==================================================================
+
+    # 1. Check if user completed verification (Returned from shortener)
     if len(message.command) == 2 and message.command[1].startswith('verify_'):
         try:
-            # Link la irunthu User ID & File ID edukkurom
-            link_parts = message.command[1].split("_", 2) # Max 2 split than panrom
+            link_parts = message.command[1].split("_", 2)
             check_id = link_parts[1]
             
             if str(message.from_user.id) == check_id:
-                await verify_user(message.from_user.id) # DB la Verify Success panrom
-                await message.reply_text(
-                    "<b>✅ Verification Successful!</b>\n\n<i>File Uploading... Please wait...</i>",
-                    protect_content=True
-                )
+                await verify_user(message.from_user.id) # Update DB (2 mins valid)
+                await message.reply_text("<b>✅ Verification Successful!</b>\n\n<i>File Uploading... Please wait...</i>", protect_content=True)
                 
-                # IMPORTANT: File ID iruntha, atha 'message.command' la maathi file process-ku anuppurom
+                # If file ID exists, replace command and continue
                 if len(link_parts) > 2:
-                    file_id_data = link_parts[2]
-                    # Inga than Magic! Verify link-a File link-a maathitom.
-                    message.command[1] = file_id_data 
-                    # Return poda koodathu! Appo than keezha poi file send aagum.
+                    message.command[1] = link_parts[2]
                 else:
                     return 
             else:
@@ -286,19 +273,13 @@ async def start(client, message):
             print(f"Verify Error: {e}")
             return
 
-    # 👆 CHANGE 1 MUDIYUTHU 👆
-
-    data = message.command[1] # (Intha vari already unga code la irukkum)
-
+    # 2. Assign data
     data = message.command[1]
 
-    # 👇👇 VERIFY CHECK CODE 👇👇
-    # 👇 CHANGE 2: PASS FILE ID TO LINK (Replace old verify check block) 👇
-
+    # 3. Check Verification Status (Verify Pannitala nu parkirom)
     if IS_VERIFY:
         if not await check_verification(client, message.from_user.id):
-            
-            # File ID-a eduthu Link generate function-ku anuppurom
+            # Verify Link Generation with File ID
             verify_url = await get_verify_link(message.from_user.id, data)
             
             buttons = [
@@ -313,35 +294,26 @@ async def start(client, message):
                 protect_content=True
             )
             return
-
-    # 👆 CHANGE 2 MUDIYUTHU 👆
-            
-            # ----------------------------------
-
-            buttons = [
-                [InlineKeyboardButton("Click Here To Verify 🟢", url=verify_url)],
-                [InlineKeyboardButton("How to Download 📥", url="https://t.me/howtoo1/3")] # Check this link
-            ]
-            
-            await message.reply_text(
-                text=f"<b>⚠️ நீங்க இன்னும் Verify பண்ணல!</b>\n\n"
-                     f"<b>📂 File:</b> {file_name}\n"
-                     f"<b>💾 Size:</b> {file_size}\n\n"
-                     f"<i>கீழே உள்ள பட்டனை கிளிக் செய்து Verify பண்ணுங்க. அப்போதான் ஃபைல் வரும்.</i>",
-                reply_markup=InlineKeyboardMarkup(buttons),
-                protect_content=True
-            )
-            return
-    # 👆👆 UPDATE MUDINJATHU 👆👆
     
+    # ==================================================================
+    # 👆👆 VERIFY LOGIC END 👆👆
+    # ==================================================================
+
     try:
         pre, file_id = data.split('_', 1)
     except:
         file_id = data
         pre = ""
+    
     if data.split("-", 1)[0] == "BATCH":
+        # ... (Batch Logic continues as usual) ...
+        # (Neenga anuppuna code-la irukra batch logic inga varum)
         sts = await message.reply("Please wait")
         file_id = data.split("-", 1)[1]
+        # ... (Batch code continue...)
+        # Note: Naan full batch code inga type pannala, unga pazhaya code la irukatha apdiye maintain pannunga.
+        # Verify mattum than mela fix panni irukken.
+        
         msgs = BATCH_FILES.get(file_id)
         if not msgs:
             file = await client.download_media(file_id)
