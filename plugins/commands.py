@@ -781,3 +781,35 @@ async def save_template(client, message):
     template = message.text.split(" ", 1)[1]
     await save_group_settings(grp_id, 'template', template)
     await sts.edit(f"Successfully changed template for {title} to\n\n{template}")
+    
+# 👇👇 AUTO INDEX LOGIC (Paste this at the VERY END) 👇👇
+
+@Client.on_message(filters.chat(CHANNELS) & (filters.document | filters.video | filters.audio))
+async def auto_index(client, message):
+    try:
+        # File ID & Info edukkurom
+        media = getattr(message, message.media.value)
+        file_id, file_ref = unpack_new_file_id(media.file_id)
+        file_name = media.file_name
+        
+        # Database la save panrom
+        await Media.update_one(
+            {'file_id': file_id},
+            {
+                '$set': {
+                    'file_id': file_id,
+                    'file_ref': file_ref,
+                    'file_name': file_name,
+                    'file_size': media.file_size,
+                    'file_type': message.media.value,
+                    'mime_type': media.mime_type,
+                    'caption': message.caption.html if message.caption else None,
+                }
+            },
+            upsert=True
+        )
+        print(f"Saved: {file_name}") # Logs la theriyum
+    except Exception as e:
+        print(f"Error saving file: {e}")
+
+# 👆👆 CODE END 👆👆
