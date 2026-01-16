@@ -256,52 +256,66 @@ async def start(client, message):
         await auto_filter(client, message) 
         return
 
-    # 👇👇 VERIFY SUCCESS CODE 👇👇
+    # 👇 CHANGE 1: AUTO FILE SEND LOGIC (Paste at top of start function) 👇
+    
     if len(message.command) == 2 and message.command[1].startswith('verify_'):
         try:
-            check_id = message.command[1].split("_", 1)[1]
+            # Link la irunthu User ID & File ID edukkurom
+            link_parts = message.command[1].split("_", 2) # Max 2 split than panrom
+            check_id = link_parts[1]
+            
             if str(message.from_user.id) == check_id:
-                await verify_user(message.from_user.id)
+                await verify_user(message.from_user.id) # DB la Verify Success panrom
                 await message.reply_text(
-                    "<b>✅ Verification Successful!</b>\n\nஇனிமேல் 24 மணிநேரத்திற்கு நீங்க Direct-ஆக ஃபைல்களை டவுன்லோட் செய்யலாம்.",
+                    "<b>✅ Verification Successful!</b>\n\n<i>File Uploading... Please wait...</i>",
                     protect_content=True
                 )
-                return
+                
+                # IMPORTANT: File ID iruntha, atha 'message.command' la maathi file process-ku anuppurom
+                if len(link_parts) > 2:
+                    file_id_data = link_parts[2]
+                    # Inga than Magic! Verify link-a File link-a maathitom.
+                    message.command[1] = file_id_data 
+                    # Return poda koodathu! Appo than keezha poi file send aagum.
+                else:
+                    return 
             else:
                 await message.reply_text("❌ Invalid Verification Link!")
                 return
         except Exception as e:
-            print(e)
+            print(f"Verify Error: {e}")
             return
-    # 👆👆 ITHODU MUDIYUTHU 👆👆
+
+    # 👆 CHANGE 1 MUDIYUTHU 👆
+
+    data = message.command[1] # (Intha vari already unga code la irukkum)
 
     data = message.command[1]
 
     # 👇👇 VERIFY CHECK CODE 👇👇
+    # 👇 CHANGE 2: PASS FILE ID TO LINK (Replace old verify check block) 👇
+
     if IS_VERIFY:
         if not await check_verification(client, message.from_user.id):
-            verify_url = await get_verify_link(message.from_user.id)
             
-            # --- FILE DETAILS EDUKKURA CODE ---
-            file_name = "Requested File"
-            file_size = ""
-            try:
-                # Data la irunthu File ID edukkurom
-                if "_" in data:
-                    try:
-                        _, file_id = data.split('_', 1)
-                    except:
-                        file_id = data
-                else:
-                    file_id = data
+            # File ID-a eduthu Link generate function-ku anuppurom
+            verify_url = await get_verify_link(message.from_user.id, data)
+            
+            buttons = [
+                [InlineKeyboardButton("Click Here To Verify 🟢", url=verify_url)],
+                [InlineKeyboardButton("How to Download 📥", url="https://t.me/howtoo1/3")]
+            ]
+            
+            await message.reply_text(
+                text="<b>⚠️ நீங்க இன்னும் Verify பண்ணல!</b>\n\n"
+                     "<i>கீழே உள்ள பட்டனை கிளிக் செய்து Verify பண்ணுங்க. Verify முடிந்தவுடன் ஃபைல் தானாகவே வந்துவிடும்.</i>",
+                reply_markup=InlineKeyboardMarkup(buttons),
+                protect_content=True
+            )
+            return
 
-                # Database la file details edukkurom
-                files_ = await get_file_details(file_id)
-                if files_:
-                    file_name = files_[0].file_name
-                    file_size = get_size(files_[0].file_size)
-            except Exception as e:
-                print(f"Error getting file details: {e}")
+    # 👆 CHANGE 2 MUDIYUTHU 👆
+            
             # ----------------------------------
 
             buttons = [
