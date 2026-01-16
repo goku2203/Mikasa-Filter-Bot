@@ -277,23 +277,53 @@ async def start(client, message):
     data = message.command[1]
 
     # 3. Check Verification Status (Verify Pannitala nu parkirom)
+   # 👇👇 UPDATED VERIFY CODE (Name & Size Bold) 👇👇
     if IS_VERIFY:
         if not await check_verification(client, message.from_user.id):
-            # Verify Link Generation with File ID
+            
+            # Verify Link Generate
             verify_url = await get_verify_link(message.from_user.id, data)
             
+            # --- FILE DETAILS EDUKKURA LOGIC START ---
+            file_name = "Requested File"
+            file_size = "Unknown"
+            
+            try:
+                # Data la irunthu File ID-a clean-a edukkurom
+                if "_" in data:
+                    try:
+                        _, temp_file_id = data.split('_', 1)
+                    except:
+                        temp_file_id = data
+                else:
+                    temp_file_id = data
+
+                # Database la search panrom
+                files_ = await get_file_details(temp_file_id)
+                if files_:
+                    file_name = files_[0].file_name
+                    file_size = get_size(files_[0].file_size)
+            except Exception as e:
+                print(f"Error getting file details: {e}")
+            # --- FILE DETAILS LOGIC END ---
+
             buttons = [
                 [InlineKeyboardButton("Click Here To Verify 🟢", url=verify_url)],
                 [InlineKeyboardButton("How to Download 📥", url="https://t.me/howtoo1/3")]
             ]
             
+            # Inga thaan Text-a BOLD-a maathi irukken (Using <b> tag)
             await message.reply_text(
-                text="<b>⚠️ நீங்க இன்னும் Verify பண்ணல!</b>\n\n"
-                     "<i>கீழே உள்ள பட்டனை கிளிக் செய்து Verify பண்ணுங்க. Verify முடிந்தவுடன் ஃபைல் தானாகவே வந்துவிடும்.</i>",
+                text=f"<b>⚠️ நீங்க இன்னும் Verify பண்ணல!</b>\n\n"
+                     f"<b>📂 File: {file_name}</b>\n"
+                     f"<b>💾 Size: {file_size}</b>\n\n"
+                     f"<i>கீழே உள்ள பட்டனை கிளிக் செய்து Verify பண்ணுங்க. Verify முடிந்தவுடன் ஃபைல் தானாகவே வந்துவிடும்.</i>",
                 reply_markup=InlineKeyboardMarkup(buttons),
                 protect_content=True
             )
             return
+
+    # 👆👆 UPDATE MUDINJATHU 👆👆
     
     # ==================================================================
     # 👆👆 VERIFY LOGIC END 👆👆
