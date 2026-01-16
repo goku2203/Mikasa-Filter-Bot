@@ -789,7 +789,7 @@ async def auto_filter(client, msg, spoll=False):
                 caption=cap[:1024],
                 reply_markup=InlineKeyboardMarkup(btn)
             )
-            await asyncio.sleep(300)
+            await asyncio.sleep(45)
             await delauto.delete()
         except (MediaEmpty, PhotoInvalidDimensions, WebpageMediaEmpty):
             pic = imdb.get('poster')
@@ -799,12 +799,12 @@ async def auto_filter(client, msg, spoll=False):
                 caption=cap[:1024],
                 reply_markup=InlineKeyboardMarkup(btn)
             )
-            await asyncio.sleep(300)
+            await asyncio.sleep(45)
             await delau.delete()
         except Exception as e:
             logger.exception(e)
             audel = await message.reply_text(cap, reply_markup=InlineKeyboardMarkup(btn))
-            await asyncio.sleep(300)
+            await asyncio.sleep(45)
             await audel.delete()
     else:
         if HYPER_MODE:
@@ -817,7 +817,7 @@ async def auto_filter(client, msg, spoll=False):
         else:
             autodel = await message.reply_text(cap, reply_markup=InlineKeyboardMarkup(btn))
 
-        await asyncio.sleep(300)
+        await asyncio.sleep(45)
         await autodel.delete()
 
     if spoll:
