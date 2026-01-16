@@ -450,9 +450,15 @@ async def get_short(link):
 
 # ----- START OF NEW UTILS CODE -----
 
-async def get_verify_link(user_id):
-    # Link creating
-    link = f"https://telegram.me/Share_4_u_Bot?start=verify_{user_id}" 
+# utils.py la intha function-a UPDATE pannunga
+
+async def get_verify_link(user_id, file_id=None):
+    # File ID iruntha, atha link kulla serthu anuppurom
+    if file_id:
+        link = f"https://telegram.me/Share_4_u_Bot?start=verify_{user_id}_{file_id}"
+    else:
+        link = f"https://telegram.me/Share_4_u_Bot?start=verify_{user_id}"
+        
     api_url = f"https://{SHORTLINK_URL}/api?api={SHORTLINK_API}&url={link}&format=text"
     
     try:
