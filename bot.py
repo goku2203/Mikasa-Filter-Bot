@@ -1,5 +1,5 @@
-#  @MrMNTG @MusammilN
-#please give credits https://github.com/MN-BOTS/ShobanaFilterBot
+# @MrMNTG @MusammilN
+# please give credits https://github.com/MN-BOTS/ShobanaFilterBot
 import logging
 import logging.config
 import os
@@ -8,6 +8,7 @@ import asyncio
 from datetime import date, datetime
 import pytz
 import aiohttp
+from aiohttp import web as webserver # Web server import
 
 # Get logging configurations
 logging.config.fileConfig('logging.conf')
@@ -27,19 +28,28 @@ from typing import Union, Optional, AsyncGenerator
 from pyrogram import types
 from Script import script
 from os import environ
-from aiohttp import web as webserver
 
 # Peer ID invalid fix
 from pyrogram import utils as pyroutils
 pyroutils.MIN_CHAT_ID = -999999999999
 pyroutils.MIN_CHANNEL_ID = -100999999999999
 
-from plugins.webcode import bot_run
-
 PORT_CODE = environ.get("PORT", "8080")
 
+# 👇👇 DUMMY WEB SERVER CODE START 👇👇
+routes = webserver.RouteTableDef()
 
-# ✅ Add this block
+@routes.get("/", allow_head=True)
+async def root_route_handler(request):
+    return webserver.json_response("MNTG Bot is Running!")
+
+async def web_server():
+    web_app = webserver.Application(client_max_size=30000000)
+    web_app.add_routes(routes)
+    return web_app
+# 👆👆 DUMMY WEB SERVER CODE END 👆👆
+
+
 async def preload_auth_channels():
     if not await db.get_auth_channels():
         await db.set_auth_channels(DEFAULT_AUTH_CHANNELS)
@@ -107,10 +117,13 @@ class Bot(Client):
         asyncio.create_task(self.kulasthree())
         asyncio.create_task(keep_alive())
 
-        client = webserver.AppRunner(await bot_run())
-        await client.setup()
+        # 👇👇 WEB SERVER STARTUP CODE 👇👇
+        app = webserver.AppRunner(await web_server())
+        await app.setup()
         bind_address = "0.0.0.0"
-        await webserver.TCPSite(client, bind_address, PORT_CODE).start()
+        await webserver.TCPSite(app, bind_address, PORT_CODE).start()
+        logging.info(f"Web Server Started on Port {PORT_CODE}")
+        # 👆👆 WEB SERVER STARTED 👆👆
 
     async def stop(self, *args):
         await super().stop()
