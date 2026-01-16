@@ -471,27 +471,28 @@ async def get_verify_link(user_id, file_id=None):
     except:
         return link
 
+# ----- NEW DATABASE RESET CODE (utils.py) -----
+
 async def verify_user(user_id):
-    # 24 Hours (86400) ku pathila 2 minutes (120 seconds) vekkurom.
-    # Ippadi panna, User verify panni 2 nimishathula expiry aagirum. 
-    # Adutha file edukum pothu thirumba verify ketkum.
+    # Time: 2 Minutes (120 seconds)
     expiry = datetime.now() + timedelta(seconds=120)
     
-    await db.col.update_one({'id': user_id}, {'$set': {'verify_status': {'is_verified': True, 'verify_until': expiry}}}, upsert=True)
+    # Inga 'verify_status_v2' nu mathi irukken. So pazhaya data ellam invalid aagidum.
+    await db.col.update_one({'id': user_id}, {'$set': {'verify_status_v2': {'is_verified': True, 'verify_until': expiry}}}, upsert=True)
 
 async def check_verification(client, user_id):
-    if not IS_VERIFY: return True
+    if not IS_VERIFY: return True # IS_VERIFY False-a iruntha check pannathu
     
-    # Database-la check panrom
     user = await db.col.find_one({'id': user_id})
     if not user: return False
     
-    verify_status = user.get('verify_status', {})
+    # Inga yum 'verify_status_v2' nu mathanum
+    verify_status = user.get('verify_status_v2', {}) 
     expiry = verify_status.get('verify_until')
     
     if expiry and datetime.now() < expiry:
-        return True # Time mudiyala, so Verified
+        return True # Time iruntha True
     
-    return False # Time mudinjuruchu
+    return False # Illana False (Verify Button Varum)
 
-# ----- END OF NEW UTILS CODE -----
+# ----- END -----
