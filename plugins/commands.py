@@ -211,6 +211,8 @@ async def start(client, message):
              InlineKeyboardButton(f'ᴍᴀɪɴ ᴄʜᴀɴɴᴇʟ', url='https://t.me/goku_stark')
         ],[
             InlineKeyboardButton('⚡ Contact Admin', url='https://t.me/Tamilmovieslink_bot')
+            # 👇 INTHA LINE AH ADD PANNUNGA 👇
+            InlineKeyboardButton('💎 Premium Plans', callback_data='see_plans')
          ]]
         reply_markup = InlineKeyboardMarkup(buttons)
         m=await message.reply_text("⚡️ Welcome to My Bot... BY TAMIL TECH GK") 
