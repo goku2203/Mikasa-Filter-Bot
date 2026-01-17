@@ -175,6 +175,49 @@ async def advantage_spoll_choker(bot, query):
 
 @Client.on_callback_query()
 async def cb_handler(client: Client, query: CallbackQuery):
+    
+    # 👇👇 PREMIUM PLAN CLICK LOGIC 👇👇
+    elif query.data == "see_plans":
+        # 1. Payment Link
+        payment_link = "gokula8@ibl" 
+        # 2. Admin Link
+        admin_link = "https://t.me/Screenshot_gk_bot"
+        # 3. Image
+        plan_image = "https://i.ibb.co/YFFY84YX/photo.jpg"
+
+        caption = (
+            "<b>💎 PREMIUM PLANS & PRICING 💎</b>\n\n"
+            "Bot-a <b>Ads illama</b>, <b>High Speed-la</b> use panna virumbureengala?\n"
+            "Keezha ulla Plans-la onna select pannunga! 👇\n\n"
+            "<b>💸 CHEAPEST PRICES:</b>\n"
+            "• 1️⃣ <b>1 Day:</b> ₹9 Only\n"
+            "• 7️⃣ <b>7 Days:</b> ₹59 Only\n"
+            "• ♾️ <b>24 Months:</b> ₹99 Only (Best Offer! 🔥)\n\n"
+            "<b>💳 Eppadi Pay Panrathu?</b>\n"
+            "1. Keezha ulla <b>'Pay Now'</b> button click pannunga.\n"
+            "2. Payment pannitu, <b>Screenshot</b> edunga.\n"
+            "3. <b>'Send Screenshot'</b> button click panni Admin-ku anuppunga.\n\n"
+            "<i>✅ Verification mudinjanthum Premium activate aagidum!</i>"
+        )
+        
+        buttons = [
+            [
+                InlineKeyboardButton("💳 Pay Now / QR Code", url=payment_link),
+                InlineKeyboardButton("📸 Send Screenshot", url=admin_link)
+            ],
+            [
+                InlineKeyboardButton("✖ Close", callback_data="close_data")
+            ]
+        ]
+        
+        # Photo-va Edit panni kaattum
+        await query.message.edit_media(
+            media=enums.InputMediaPhoto(media=plan_image, caption=caption),
+            reply_markup=InlineKeyboardMarkup(buttons)
+        )
+        return await query.answer()
+    # 👆👆 CODE END 👆👆
+
     if query.data == "close_data":
         await query.message.delete()
         # 'cb_handler' kulla ithai podunga
@@ -446,25 +489,29 @@ async def cb_handler(client: Client, query: CallbackQuery):
     elif query.data == "tsp":
         await query.answer(text=script.TAM_SPELL, show_alert="true")
         
-    elif query.data == "start":
+   elif query.data == "start":
         buttons = [[
             InlineKeyboardButton('ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘs', url=f'http://t.me/{temp.U_NAME}?startgroup=true')
             ],[
             InlineKeyboardButton('ʜᴇʟᴘ', callback_data='help'),
             InlineKeyboardButton('ᴀʙᴏᴜᴛ', callback_data='about')
         ],[
-             InlineKeyboardButton(f'ᴜᴘᴅᴀᴛᴇs​', url='https://t.me/super_goku_god'),
-             InlineKeyboardButton(f'ᴍᴀɪɴ ᴄʜᴀɴɴᴇʟ', url='https://t.me/Goku_Stark')
+             InlineKeyboardButton(f'Anime Channel​', url='https://t.me/Anime_single'),
+             InlineKeyboardButton(f'ᴍᴀɪɴ ᴄʜᴀɴɴᴇʟ', url='https://t.me/goku_stark')
          ],[
-            InlineKeyboardButton('⚡ Contact Admin', url='https://t.me/Tamilmovieslink_bot')
+            InlineKeyboardButton('⚡ Contact Admin', url='https://t.me/Tamilmovieslink_bot'),
+            InlineKeyboardButton('💎 Premium Plans', callback_data='see_plans')
             ]]
+        
         reply_markup = InlineKeyboardMarkup(buttons)
+        
         await query.message.edit_text(
             text=script.START_TXT.format(query.from_user.mention, temp.U_NAME, temp.B_NAME),
             reply_markup=reply_markup,
             parse_mode=enums.ParseMode.HTML
         )
         await query.answer('@Goku_Stark')
+
     elif query.data == "help":
         buttons = [[
             InlineKeyboardButton('Mᴀɴᴜᴀʟ Fɪʟᴛᴇʀ', callback_data='manuelfilter'),
