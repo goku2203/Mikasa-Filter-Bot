@@ -172,11 +172,13 @@ async def advantage_spoll_choker(bot, query):
             await asyncio.sleep(10)
             await k.delete()
 
-
 @Client.on_callback_query()
 async def cb_handler(client: Client, query: CallbackQuery):
-    
-    # 👇👇 PREMIUM PLAN CLICK LOGIC 👇👇
+    # 1. Close Data (Idhu thaan FIRST irukkanum - 'if' use pannanum)
+    if query.data == "close_data":
+        await query.message.delete()
+
+    # 2. Premium Plans (Idhu SECOND irukkanum - 'elif' use pannanum)
     elif query.data == "see_plans":
         # 1. Payment Link
         payment_link = "gokula8@ibl" 
@@ -210,22 +212,17 @@ async def cb_handler(client: Client, query: CallbackQuery):
             ]
         ]
         
-        # Photo-va Edit panni kaattum
         await query.message.edit_media(
             media=enums.InputMediaPhoto(media=plan_image, caption=caption),
             reply_markup=InlineKeyboardMarkup(buttons)
         )
         return await query.answer()
-    # 👆👆 CODE END 👆👆
 
-    if query.data == "close_data":
-        await query.message.delete()
-        # 'cb_handler' kulla ithai podunga
-    elif query.data == "premium_info":
-        await premium_ad(client, query.message) # Mela irukura function-a call pannum
-        await query.answer()
-
+    # 3. Del All Confirm (Idhu THIRD - already unga code la irukkum)
     elif query.data == "delallconfirm":
+        userid = query.from_user.id
+        # ... (Meethi code apdiye irukkattum) ...
+        
         userid = query.from_user.id
         chat_type = query.message.chat.type
 
