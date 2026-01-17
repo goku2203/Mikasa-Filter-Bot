@@ -190,7 +190,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
                     title = chat.title
                 except:
                     await query.message.edit_text("Make sure I'm present in your group!!", quote=True)
-                    return await query.answer('Piracy Is Crime')
+                    return await query.answer('@Goku_Stark')
             else:
                 await query.message.edit_text(
                     "I'm not connected to any groups!\nCheck /connections or connect to any groups",
@@ -203,7 +203,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
             title = query.message.chat.title
 
         else:
-            return await query.answer('Piracy Is Crime')
+            return await query.answer('@Goku_Stark')
 
         st = await client.get_chat_member(grp_id, userid)
         if (st.status == enums.ChatMemberStatus.OWNER) or (str(userid) in ADMINS):
@@ -257,7 +257,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
             reply_markup=keyboard,
             parse_mode=enums.ParseMode.MARKDOWN
         )
-        return await query.answer('Piracy Is Crime')
+        return await query.answer('@Goku_Stark')
     elif "connectcb" in query.data:
         await query.answer()
 
@@ -278,7 +278,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
             )
         else:
             await query.message.edit_text('Some error occurred!!', parse_mode=enums.ParseMode.MARKDOWN)
-        return await query.answer('Piracy Is Crime')
+        return await query.answer('@Goku_Stark')
     elif "disconnect" in query.data:
         await query.answer()
 
@@ -301,7 +301,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
                 f"Some error occurred!!",
                 parse_mode=enums.ParseMode.MARKDOWN
             )
-        return await query.answer('Piracy Is Crime')
+        return await query.answer('@Goku_Stark')
     elif "deletecb" in query.data:
         await query.answer()
 
@@ -319,7 +319,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
                 f"Some error occurred!!",
                 parse_mode=enums.ParseMode.MARKDOWN
             )
-        return await query.answer('Piracy Is Crime')
+        return await query.answer('@Goku_Stark')
     elif query.data == "backcb":
         await query.answer()
 
@@ -330,7 +330,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
             await query.message.edit_text(
                 "There are no active connections!! Connect to some groups first.",
             )
-            return await query.answer('Piracy Is Crime')
+            return await query.answer('@Goku_Stark')
         buttons = []
         for groupid in groupids:
             try:
@@ -451,7 +451,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
              InlineKeyboardButton(f'ᴜᴘᴅᴀᴛᴇs​', url='https://t.me/super_goku_god'),
              InlineKeyboardButton(f'ᴍᴀɪɴ ᴄʜᴀɴɴᴇʟ', url='https://t.me/Goku_Stark')
          ],[
-            InlineKeyboardButton('ʀᴇᴘᴏ', url='https://github.com/mn-bots/ShobanaFilterBot')
+            InlineKeyboardButton('⚡ Contact Admin', url='https://t.me/Tamilmovieslink_bot')
             ]]
         reply_markup = InlineKeyboardMarkup(buttons)
         await query.message.edit_text(
@@ -459,7 +459,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
             reply_markup=reply_markup,
             parse_mode=enums.ParseMode.HTML
         )
-        await query.answer('Piracy Is Crime')
+        await query.answer('@Goku_Stark')
     elif query.data == "help":
         buttons = [[
             InlineKeyboardButton('Mᴀɴᴜᴀʟ Fɪʟᴛᴇʀ', callback_data='manuelfilter'),
@@ -471,7 +471,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
             InlineKeyboardButton('Hᴏᴍᴇ', callback_data='start'),
             InlineKeyboardButton('Bᴀᴄᴋ', callback_data='start')
         ],[
-            InlineKeyboardButton('ʀᴇᴘᴏ', url='https://github.com/mn-bots/ShobanaFilterBot')
+            InlineKeyboardButton('⚡ Contact Admin', url='https://t.me/Tamilmovieslink_bot')
             ]]
         reply_markup = InlineKeyboardMarkup(buttons)
         await query.message.edit_text(
@@ -482,7 +482,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
     elif query.data == "about":
         buttons = [[
             InlineKeyboardButton('ʙᴀᴄᴋ', callback_data='start'),
-            InlineKeyboardButton('ʀᴇᴘᴏ', url='https://github.com/mn-bots/ShobanaFilterBot')
+            InlineKeyboardButton('⚡ Contact Admin', url='https://t.me/Tamilmovieslink_bot')
             ]]
         reply_markup = InlineKeyboardMarkup(buttons)
         await query.message.edit_text(
@@ -493,7 +493,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
     elif query.data == "source":
         buttons = [[
             InlineKeyboardButton('ʙᴀᴄᴋ', callback_data='about'),
-            InlineKeyboardButton('ʀᴇᴘᴏ', url='https://github.com/mn-bots/ShobanaFilterBot')
+            InlineKeyboardButton('⚡ Contact Admin', url='https://t.me/Tamilmovieslink_bot')
         ]]
         reply_markup = InlineKeyboardMarkup(buttons)
         await query.message.edit_text(
@@ -504,7 +504,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
     elif query.data == "manuelfilter":
         buttons = [[
             InlineKeyboardButton('ʙᴀᴄᴋ', callback_data='help'),
-            InlineKeyboardButton('ʀᴇᴘᴏ', url='https://github.com/mn-bots/ShobanaFilterBot'),
+            InlineKeyboardButton('⚡ Contact Admin', url='https://t.me/Tamilmovieslink_bot'),
             InlineKeyboardButton('ʙᴜᴛᴛᴏɴ', callback_data='button')
         ]]
         reply_markup = InlineKeyboardMarkup(buttons)
@@ -516,7 +516,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
     elif query.data == "button":
         buttons = [[
            InlineKeyboardButton('ʙᴀᴄᴋ', callback_data='help'),
-            InlineKeyboardButton('ʀᴇᴘᴏ', url='https://github.com/mn-bots/ShobanaFilterBot')
+            InlineKeyboardButton('⚡ Contact Admin', url='https://t.me/Tamilmovieslink_bot')
         ]]
         reply_markup = InlineKeyboardMarkup(buttons)
         await query.message.edit_text(
@@ -527,7 +527,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
     elif query.data == "autofilter":
         buttons = [[
            InlineKeyboardButton('ʙᴀᴄᴋ', callback_data='help'),
-            InlineKeyboardButton('ʀᴇᴘᴏ', url='https://github.com/mn-bots/ShobanaFilterBot')
+            InlineKeyboardButton('⚡ Contact Admin', url='https://t.me/Tamilmovieslink_bot')
         ]]
         reply_markup = InlineKeyboardMarkup(buttons)
         await query.message.edit_text(
@@ -538,7 +538,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
     elif query.data == "coct":
         buttons = [[
              InlineKeyboardButton('ʙᴀᴄᴋ', callback_data='help'),
-            InlineKeyboardButton('ʀᴇᴘᴏ', url='https://github.com/mn-bots/ShobanaFilterBot')
+            InlineKeyboardButton('⚡ Contact Admin', url='https://t.me/Tamilmovieslink_bot')
         ]]
         reply_markup = InlineKeyboardMarkup(buttons)
         await query.message.edit_text(
@@ -550,7 +550,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
         buttons = [[
             InlineKeyboardButton('ʙᴀᴄᴋ', callback_data='help'),
             InlineKeyboardButton('ᴀᴅᴍɪɴ', callback_data='admin'),
-            InlineKeyboardButton('ʀᴇᴘᴏ', url='https://github.com/mn-bots/ShobanaFilterBot')
+            InlineKeyboardButton('⚡ Contact Admin', url='https://t.me/Tamilmovieslink_bot')
         ]]
         reply_markup = InlineKeyboardMarkup(buttons)
         await query.message.edit_text(
@@ -561,7 +561,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
     elif query.data == "admin":
         buttons = [[
             InlineKeyboardButton('ʙᴀᴄᴋ', callback_data='help'),
-            InlineKeyboardButton('ʀᴇᴘᴏ', url='https://github.com/mn-bots/ShobanaFilterBot')
+            InlineKeyboardButton('⚡ Contact Admin', url='https://t.me/Tamilmovieslink_bot')
         ]]
         reply_markup = InlineKeyboardMarkup(buttons)
         await query.message.edit_text(
@@ -573,7 +573,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
         buttons = [[
             InlineKeyboardButton('ʙᴀᴄᴋ', callback_data='help'),
             InlineKeyboardButton('♻️', callback_data='rfrsh'),
-            InlineKeyboardButton('ʀᴇᴘᴏ', url='https://github.com/mn-bots/ShobanaFilterBot')
+            InlineKeyboardButton('⚡ Contact Admin', url='https://t.me/Tamilmovieslink_bot')
         ]]
         reply_markup = InlineKeyboardMarkup(buttons)
         total = await Media.count_documents()
@@ -593,7 +593,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
         buttons = [[
             InlineKeyboardButton('ʙᴀᴄᴋ', callback_data='help'),
             InlineKeyboardButton('♻️', callback_data='rfrsh'),
-            InlineKeyboardButton('ʀᴇᴘᴏ', url='https://github.com/mn-bots/ShobanaFilterBot')
+            InlineKeyboardButton('⚡ Contact Admin', url='https://t.me/Tamilmovieslink_bot')
         ]]
         reply_markup = InlineKeyboardMarkup(buttons)
         total = await Media.count_documents()
@@ -614,7 +614,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
 
         if str(grp_id) != str(grpid):
             await query.message.edit("Your Active Connection Has Been Changed. Go To /settings.")
-            return await query.answer('Piracy Is Crime')
+            return await query.answer('@Goku_Stark')
 
         if status == "True":
             await save_group_settings(grpid, set_type, False)
@@ -661,7 +661,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
             ]
             reply_markup = InlineKeyboardMarkup(buttons)
             await query.message.edit_reply_markup(reply_markup)
-    await query.answer('Piracy Is Crime')
+    await query.answer('@Goku_Stark')
 
 async def auto_filter(client, msg, spoll=False):
     if not spoll:
