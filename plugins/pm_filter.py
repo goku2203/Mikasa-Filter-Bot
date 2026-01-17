@@ -181,7 +181,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
     # 2. Premium Plans (Idhu SECOND irukkanum - 'elif' use pannanum)
     elif query.data == "see_plans":
         # 1. Payment Link
-        payment_link = "gokula8@ibl" 
+        payment_link = "upi://pay?pa=gokula8@ibl" 
         # 2. Admin Link
         admin_link = "https://t.me/Screenshot_gk_bot"
         # 3. Image
