@@ -823,7 +823,7 @@ async def premium_plans(client, message):
     try:
         # 1. Payment Link (Unga UPI ID illana Payment Gateway Link inga podunga)
         # Example: "https://upi.link/unga_id" allathu "upi://pay?pa=unga_upi_id@okaxis&pn=BotAdmin"
-        payment_link = "upi://pay?pa=gokula8@ibl" # Ippo Admin link potrukken, neenga maathikkonga
+        payment_link = "https://upi.pe/gokula8@ibl" # Ippo Admin link potrukken, neenga maathikkonga
 
         # 2. Admin Contact Link (Screenshot Anuppa)
         # "Gokulakrishnan" enkira idathula unga Telegram Username podunga
