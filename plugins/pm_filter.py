@@ -485,6 +485,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
         await query.answer(text=script.HIN_SPELL, show_alert="true")
     elif query.data == "tsp":
         await query.answer(text=script.TAM_SPELL, show_alert="true")
+        
    elif query.data == "start":
         buttons = [[
             InlineKeyboardButton('ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘs', url=f'http://t.me/{temp.U_NAME}?startgroup=true')
