@@ -177,6 +177,11 @@ async def advantage_spoll_choker(bot, query):
 async def cb_handler(client: Client, query: CallbackQuery):
     if query.data == "close_data":
         await query.message.delete()
+        # 'cb_handler' kulla ithai podunga
+    elif query.data == "premium_info":
+        await premium_ad(client, query.message) # Mela irukura function-a call pannum
+        await query.answer()
+
     elif query.data == "delallconfirm":
         userid = query.from_user.id
         chat_type = query.message.chat.type
