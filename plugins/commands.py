@@ -184,7 +184,7 @@ async def start(client, message):
             [
                 InlineKeyboardButton(f'Anime Channel​', url='https://t.me/Anime_single'),
                 InlineKeyboardButton(f'ᴍᴀɪɴ ᴄʜᴀɴɴᴇʟ', url='https://t.me/goku_stark'),
-                InlineKeyboardButton('Request', url='https://t.me/Tamilmovieslink_bot')
+                InlineKeyboardButton('⚡ Contact Admin', url='https://t.me/Tamilmovieslink_bot')
             ]
         ]
         reply_markup = InlineKeyboardMarkup(buttons)
@@ -210,7 +210,7 @@ async def start(client, message):
              InlineKeyboardButton(f'Anime Channel​', url='https://t.me/Anime_single'),
              InlineKeyboardButton(f'ᴍᴀɪɴ ᴄʜᴀɴɴᴇʟ', url='https://t.me/goku_stark')
         ],[
-            InlineKeyboardButton('Request', url='https://t.me/Tamilmovieslink_bot')
+            InlineKeyboardButton('⚡ Contact Admin', url='https://t.me/Tamilmovieslink_bot')
          ]]
         reply_markup = InlineKeyboardMarkup(buttons)
         m=await message.reply_text("⚡️ Welcome to My Bot... BY TAMIL TECH GK") 
