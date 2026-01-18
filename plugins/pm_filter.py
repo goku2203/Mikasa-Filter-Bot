@@ -712,6 +712,8 @@ async def cb_handler(client: Client, query: CallbackQuery):
             await query.message.edit_reply_markup(reply_markup)
     await query.answer('@Goku_Stark')
 
+# 👇👇 NEW AUTO FILTER CODE (Paste This) 👇👇
+
 async def auto_filter(client, msg, spoll=False):
     if not spoll:
         message = msg
@@ -721,10 +723,26 @@ async def auto_filter(client, msg, spoll=False):
             return
         if 2 < len(message.text) < 100:
             search = message.text
+            
+            # 👇 SEARCHING ANIMATION (Loading Bar) 👇
+            search_msg = await message.reply_text(
+                f"<b>🔍 Searching...</b>\n"
+                f"<code>[⬛⬛⬜⬜⬜⬜⬜⬜] 20%</code>"
+            )
+            await asyncio.sleep(0.5)
+            await search_msg.edit(
+                f"<b>✅ Completed!</b>\n"
+                f"<code>[⬛⬛⬛⬛⬛⬛⬛⬛] 100%</code>\n\n"
+                f"<i>Here is your result 👇</i>"
+            )
+            # 👆 ANIMATION END 👆
+
             files, offset, total_results = await get_search_results(search.lower(), offset=0, filter=True)
             
             if not files:
-                # 👇👇 AUTO REQUEST LOGIC START 👇👇
+                await search_msg.delete() # Result illana animation msg delete
+                
+                # 👇 AUTO REQUEST LOGIC START 👇
                 try:
                     # Inga unga Channel ID podunga (-100 kandippa irukkanum)
                     REQ_CHANNEL_ID = -1003555146843 
@@ -740,7 +758,7 @@ async def auto_filter(client, msg, spoll=False):
                         await client.send_message(REQ_CHANNEL_ID, req_msg)
                 except Exception as e:
                     print(f"Auto Request Error: {e}")
-                # 👆👆 AUTO REQUEST LOGIC END 👆👆
+                # 👆 AUTO REQUEST LOGIC END 👆
 
                 if settings["spell_check"]:
                     return await advantage_spell_chok(client, msg)
@@ -808,7 +826,7 @@ async def auto_filter(client, msg, spoll=False):
         else:
             btn.append([InlineKeyboardButton(text="📃 1/1", callback_data="pages")])
             
-    # 👇 INTHA LINE: REQUEST BUTTON 👇
+    # 👇 REQUEST BUTTON (Add Panniachu) 👇
     btn.append([InlineKeyboardButton("📝 Request Movie / Series 📝", url="https://t.me/Tamilmovieslink_bot")])
     
     imdb = await get_poster(search, file=(files[0]).file_name) if settings["imdb"] else None
@@ -851,14 +869,18 @@ async def auto_filter(client, msg, spoll=False):
 
     if imdb and imdb.get('poster'):
         try:
+            # Result vantha udane Animation msg delete aaganum
+            if not spoll: await search_msg.delete() # 👈 Animation Delete Logic
+            
             delauto = await message.reply_photo(
                 photo=imdb.get('poster'),
                 caption=cap[:1024],
                 reply_markup=InlineKeyboardMarkup(btn)
             )
-            await asyncio.sleep(45)
+            await asyncio.sleep(60)
             await delauto.delete()
         except (MediaEmpty, PhotoInvalidDimensions, WebpageMediaEmpty):
+            if not spoll: await search_msg.delete()
             pic = imdb.get('poster')
             poster = pic.replace('.jpg', "._V1_UX360.jpg")
             delau = await message.reply_photo(
@@ -866,14 +888,17 @@ async def auto_filter(client, msg, spoll=False):
                 caption=cap[:1024],
                 reply_markup=InlineKeyboardMarkup(btn)
             )
-            await asyncio.sleep(45)
+            await asyncio.sleep(60)
             await delau.delete()
         except Exception as e:
+            if not spoll: await search_msg.delete()
             logger.exception(e)
             audel = await message.reply_text(cap, reply_markup=InlineKeyboardMarkup(btn))
-            await asyncio.sleep(45)
+            await asyncio.sleep(60)
             await audel.delete()
     else:
+        if not spoll: await search_msg.delete() # 👈 Animation Delete Logic
+        
         if HYPER_MODE:
             autodel = await message.reply_text(
                 cap_text,
@@ -884,7 +909,7 @@ async def auto_filter(client, msg, spoll=False):
         else:
             autodel = await message.reply_text(cap, reply_markup=InlineKeyboardMarkup(btn))
 
-        await asyncio.sleep(45)
+        await asyncio.sleep(60)
         await autodel.delete()
 
     if spoll:
