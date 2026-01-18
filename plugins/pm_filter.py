@@ -722,27 +722,28 @@ async def auto_filter(client, msg, spoll=False):
         if 2 < len(message.text) < 100:
             search = message.text
             files, offset, total_results = await get_search_results(search.lower(), offset=0, filter=True)
-            if not files:
-        # 👇 Indha 4 SPACES romba mukkiyam! (Tab amuthunga)
-            try:
-            # Inga unga Channel ID podunga
-            REQ_CHANNEL_ID = -1001234567890 
             
-            if len(search) > 3:
-                req_msg = (
-                    f"<b>⚠️ Missing Movie Detected!</b>\n\n"
-                    f"<b>🔍 Query:</b> <code>{search}</code>\n"
-                    f"<b>👤 User:</b> {message.from_user.mention}\n"
-                    f"<b>📂 Group:</b> {message.chat.title}\n\n"
-                    f"<i>Please upload this movie soon!</i>"
-                )
-                await client.send_message(REQ_CHANNEL_ID, req_msg)
-        except Exception as e:
-            print(f"Auto Request Error: {e}")
+            if not files:
+                # 👇👇 AUTO REQUEST LOGIC START 👇👇
+                try:
+                    # Inga unga Channel ID podunga (-100 kandippa irukkanum)
+                    REQ_CHANNEL_ID = -1001234567890 
+                    
+                    if len(search) > 3:
+                        req_msg = (
+                            f"<b>⚠️ Missing Movie Detected!</b>\n\n"
+                            f"<b>🔍 Query:</b> <code>{search}</code>\n"
+                            f"<b>👤 User:</b> {message.from_user.mention}\n"
+                            f"<b>📂 Group:</b> {message.chat.title}\n\n"
+                            f"<i>Please upload this movie soon!</i>"
+                        )
+                        await client.send_message(REQ_CHANNEL_ID, req_msg)
+                except Exception as e:
+                    print(f"Auto Request Error: {e}")
+                # 👆👆 AUTO REQUEST LOGIC END 👆👆
 
-        # Spell Check Logic (Idhuvum 'if' kku ner-a ulla irukkanum)
-        if settings["spell_check"]:
-            return await advantage_spell_chok(client, msg)
+                if settings["spell_check"]:
+                    return await advantage_spell_chok(client, msg)
                 else:
                     return
         else:
@@ -807,9 +808,8 @@ async def auto_filter(client, msg, spoll=False):
         else:
             btn.append([InlineKeyboardButton(text="📃 1/1", callback_data="pages")])
             
-# 👇 INTHA LINE AH INGA ADD PANNUNGA 👇
+    # 👇 INTHA LINE: REQUEST BUTTON 👇
     btn.append([InlineKeyboardButton("📝 Request Movie / Series 📝", url="https://t.me/Tamilmovieslink_bot")])
-    # 👆 MELA IRUKKURATHA ADD PANNUNGA 👆
     
     imdb = await get_poster(search, file=(files[0]).file_name) if settings["imdb"] else None
     TEMPLATE = settings['template']
@@ -856,7 +856,7 @@ async def auto_filter(client, msg, spoll=False):
                 caption=cap[:1024],
                 reply_markup=InlineKeyboardMarkup(btn)
             )
-            await asyncio.sleep(60)
+            await asyncio.sleep(45)
             await delauto.delete()
         except (MediaEmpty, PhotoInvalidDimensions, WebpageMediaEmpty):
             pic = imdb.get('poster')
@@ -866,12 +866,12 @@ async def auto_filter(client, msg, spoll=False):
                 caption=cap[:1024],
                 reply_markup=InlineKeyboardMarkup(btn)
             )
-            await asyncio.sleep(60)
+            await asyncio.sleep(45)
             await delau.delete()
         except Exception as e:
             logger.exception(e)
             audel = await message.reply_text(cap, reply_markup=InlineKeyboardMarkup(btn))
-            await asyncio.sleep(60)
+            await asyncio.sleep(45)
             await audel.delete()
     else:
         if HYPER_MODE:
@@ -884,7 +884,7 @@ async def auto_filter(client, msg, spoll=False):
         else:
             autodel = await message.reply_text(cap, reply_markup=InlineKeyboardMarkup(btn))
 
-        await asyncio.sleep(60)
+        await asyncio.sleep(45)
         await autodel.delete()
 
     if spoll:
