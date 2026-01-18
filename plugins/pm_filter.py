@@ -790,7 +790,7 @@ async def auto_filter(client, msg, spoll=False):
             btn.append([InlineKeyboardButton(text="📃 1/1", callback_data="pages")])
             
 # 👇 INTHA LINE AH INGA ADD PANNUNGA 👇
-    btn.append([InlineKeyboardButton("How to Link Download 📥", url="https://t.me/howtoo1/3")])
+    btn.append([InlineKeyboardButton("📝 Request Movie / Series 📝", url="https://t.me/Tamilmovieslink_bot")])
     # 👆 MELA IRUKKURATHA ADD PANNUNGA 👆
     
     imdb = await get_poster(search, file=(files[0]).file_name) if settings["imdb"] else None
@@ -838,7 +838,7 @@ async def auto_filter(client, msg, spoll=False):
                 caption=cap[:1024],
                 reply_markup=InlineKeyboardMarkup(btn)
             )
-            await asyncio.sleep(45)
+            await asyncio.sleep(60)
             await delauto.delete()
         except (MediaEmpty, PhotoInvalidDimensions, WebpageMediaEmpty):
             pic = imdb.get('poster')
@@ -848,12 +848,12 @@ async def auto_filter(client, msg, spoll=False):
                 caption=cap[:1024],
                 reply_markup=InlineKeyboardMarkup(btn)
             )
-            await asyncio.sleep(45)
+            await asyncio.sleep(60)
             await delau.delete()
         except Exception as e:
             logger.exception(e)
             audel = await message.reply_text(cap, reply_markup=InlineKeyboardMarkup(btn))
-            await asyncio.sleep(45)
+            await asyncio.sleep(60)
             await audel.delete()
     else:
         if HYPER_MODE:
@@ -866,7 +866,7 @@ async def auto_filter(client, msg, spoll=False):
         else:
             autodel = await message.reply_text(cap, reply_markup=InlineKeyboardMarkup(btn))
 
-        await asyncio.sleep(45)
+        await asyncio.sleep(60)
         await autodel.delete()
 
     if spoll:
@@ -902,7 +902,7 @@ async def advantage_spell_chok(client, msg):
             reply_markup=InlineKeyboardMarkup(button),
             reply_to_message_id=msg.id
         )
-        await asyncio.sleep(45)
+        await asyncio.sleep(60)
         await k.delete()      
         return
     movielist = []
