@@ -727,7 +727,7 @@ async def auto_filter(client, msg, spoll=False):
                 # 👇👇 AUTO REQUEST LOGIC START 👇👇
                 try:
                     # Inga unga Channel ID podunga (-100 kandippa irukkanum)
-                    REQ_CHANNEL_ID = -1001234567890 
+                    REQ_CHANNEL_ID = -1003555146843 
                     
                     if len(search) > 3:
                         req_msg = (
