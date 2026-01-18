@@ -325,7 +325,8 @@ async def start(client, message):
             ]
             
             # Inga thaan Text-a BOLD-a maathi irukken (Using <b> tag)
-            await message.reply_text(
+            # 👇 Message-a 'verify_msg' nu oru variable-la store panrom
+            verify_msg = await message.reply_text(
                 text=f"<b>⚠️ நீங்க இன்னும் Verify பண்ணல!</b>\n\n"
                      f"<b>📂 File: {file_name}</b>\n"
                      f"<b>💾 Size: {file_size}</b>\n\n"
@@ -333,6 +334,9 @@ async def start(client, message):
                 reply_markup=InlineKeyboardMarkup(buttons),
                 protect_content=True
             )
+            
+            # 👇 3 Hours (10800 Seconds) kalichu Delete aaga solrom
+            asyncio.create_task(auto_delete_message(client, verify_msg, 10800))
             return
 
     # 👆👆 UPDATE MUDINJATHU 👆👆
