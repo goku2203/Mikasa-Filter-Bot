@@ -723,8 +723,27 @@ async def auto_filter(client, msg, spoll=False):
             search = message.text
             files, offset, total_results = await get_search_results(search.lower(), offset=0, filter=True)
             if not files:
-                if settings["spell_check"]:
-                    return await advantage_spell_chok(client, msg)
+            # 👇👇 AUTO REQUEST LOGIC START 👇👇
+            try:
+                # Inga unga Request Channel ID-ya podunga (-100 kandippa venum)
+                REQ_CHANNEL_ID = -1003555146843 
+                
+                # Check formatting to avoid junk messages
+                if len(search) > 3: # 3 eluthukku mela iruntha than send pannum
+                    req_msg = (
+                        f"<b>⚠️ Missing Movie Detected!</b>\n\n"
+                        f"<b>🔍 Query:</b> <code>{search}</code>\n"
+                        f"<b>👤 User:</b> {message.from_user.mention}\n"
+                        f"<b>📂 Group:</b> {message.chat.title}\n\n"
+                        f"<i>Please upload this movie soon!</i>"
+                    )
+                    await client.send_message(REQ_CHANNEL_ID, req_msg)
+            except Exception as e:
+                print(f"Auto Request Error: {e}")
+            # 👆👆 AUTO REQUEST LOGIC END 👆👆
+
+            if settings["spell_check"]:
+                return await advantage_spell_chok(client, msg)
                 else:
                     return
         else:
