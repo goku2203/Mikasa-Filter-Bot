@@ -16,6 +16,12 @@ import json
 from pyrogram.types import Message
 import base64
 from datetime import datetime, timedelta
+# 👇 IMPORTANT IMPORTS (Top-la iruntha okay, illana ingaye irukkattum)
+import re
+from pyrogram.errors import MessageNotModified
+from database.ia_filterdb import Media, get_search_results, unpack_new_file_id
+from info import UPDATES_CHANNEL, CHANNELS, PICS
+from utils import get_size
 
 logger = logging.getLogger(__name__)
 
@@ -787,18 +793,26 @@ async def save_template(client, message):
     template = message.text.split(" ", 1)[1]
     await save_group_settings(grp_id, 'template', template)
     await sts.edit(f"Successfully changed template for {title} to\n\n{template}")
-    
-# 👇👇 AUTO INDEX LOGIC (Paste this at the VERY END) 👇👇
+
+# Helper: Padam perai clean-a edukka (Smart Match-kaga)
+def get_clean_name(name):
+    # Quality & Junk words remove panrom to find match
+    clean = re.sub(r"(\[.*?\]|\{.*?\}|\(.*?\)|720p|1080p|480p|HEVC|x264|x265|mkv|mp4|avi|www\.|@\w+)", "", name, flags=re.IGNORECASE)
+    clean = re.sub(r"\s+", " ", clean).strip()
+    return clean.lower()
 
 @Client.on_message(filters.chat(CHANNELS) & (filters.document | filters.video | filters.audio))
 async def auto_index(client, message):
     try:
-        # File ID & Info edukkurom
+        # ==========================================
+        # PART 1: NORMAL AUTO INDEXING (DB SAVE)
+        # ==========================================
+        
         media = getattr(message, message.media.value)
         file_id, file_ref = unpack_new_file_id(media.file_id)
         file_name = media.file_name
         
-        # Database la save panrom
+        # Database la Save Panrom (Idhu thaan mukkiyam)
         await Media.update_one(
             {'file_id': file_id},
             {
@@ -814,9 +828,81 @@ async def auto_index(client, message):
             },
             upsert=True
         )
-        print(f"Saved: {file_name}") # Logs la theriyum
+        print(f"Saved to DB: {file_name}") 
+
+        # ==========================================
+        # PART 2: SMART CHANNEL UPDATE (OPTIONAL)
+        # ==========================================
+        
+        # Channel ID set pannala na, ingaye mudichidum.
+        if not UPDATES_CHANNEL:
+            return 
+
+        # Padam perai clean panrom (Ex: "Don 2022 720p" -> "don 2022")
+        clean_name = get_clean_name(file_name)
+        
+        # Database-la intha padathukku sambandhamana ella files-um edukkurom
+        files, _, _ = await get_search_results(clean_name, max_results=10)
+        
+        if files:
+            # Button Logic (Simple & Neat Style)
+            btn = []
+            for file in files:
+                f_name = file.file_name
+                f_size = get_size(file.file_size)
+                # Link Generate (Secure File Link)
+                link = f"https://t.me/{temp.U_NAME}?start=filep_{file.file_id}" 
+                
+                # Button - Name & Size
+                btn.append([InlineKeyboardButton(f"📁 {f_name[:20]}... [{f_size}]", url=link)])
+
+            # Smart Caption
+            caption = (
+                f"<b>✨ NEW FILE ADDED ✨</b>\n\n"
+                f"<b>🎬 Title:</b> {clean_name.upper()}\n"
+                f"<b>📂 Total Files:</b> {len(files)}\n\n"
+                f"<i>👇 Select your quality below 👇</i>"
+            )
+
+            # --- CHECK & UPDATE LOGIC ---
+            # Channel-oda last 20 messages-a check panrom
+            updated = False
+            async for msg in client.get_chat_history(UPDATES_CHANNEL, limit=20):
+                # Caption-la padathoda per iruntha, Edit panrom
+                if msg.caption and clean_name.upper() in msg.caption:
+                    try:
+                        await msg.edit_caption(
+                            caption=caption,
+                            reply_markup=InlineKeyboardMarkup(btn)
+                        )
+                        updated = True
+                        print(f"Updated Post for: {clean_name}")
+                        break
+                    except MessageNotModified:
+                        pass # Change illana onnum panna vendam
+                    except Exception as e:
+                        print(f"Edit Failed: {e}")
+
+            # Old message illana, Puthusa send panrom
+            if not updated:
+                poster = random.choice(PICS) if PICS else None
+                if poster:
+                    await client.send_photo(
+                        chat_id=UPDATES_CHANNEL,
+                        photo=poster,
+                        caption=caption,
+                        reply_markup=InlineKeyboardMarkup(btn)
+                    )
+                else:
+                    await client.send_message(
+                        chat_id=UPDATES_CHANNEL,
+                        text=caption,
+                        reply_markup=InlineKeyboardMarkup(btn)
+                    )
+                print(f"New Post Created for: {clean_name}")
+
     except Exception as e:
-        print(f"Error saving file: {e}")
+        print(f"Auto Index Error: {e}")
 
 # 👆👆 CODE END 👆👆
 
