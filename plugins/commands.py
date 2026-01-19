@@ -803,6 +803,8 @@ def get_clean_name(name):
 
 @Client.on_message(filters.chat(CHANNELS) & (filters.document | filters.video | filters.audio))
 async def auto_index(client, message):
+    print(f"Bot detected a file in: {message.chat.title}")
+    
     try:
         # ==========================================
         # PART 1: NORMAL AUTO INDEXING (DB SAVE)
