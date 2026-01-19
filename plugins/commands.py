@@ -25,6 +25,12 @@ from utils import get_size
 
 logger = logging.getLogger(__name__)
 
+# 👇 SPY CODE START 👇
+@Client.on_message(filters.channel)
+async def spy_channel_id(client, message):
+    print(f"👀 SPY: I found a message in '{message.chat.title}' | ID: {message.chat.id}")
+# 👆 SPY CODE END 👆
+
 BATCH_FILES = {}
 AUTO_DELETE_SECONDS = 15
 
