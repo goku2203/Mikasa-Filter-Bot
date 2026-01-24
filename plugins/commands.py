@@ -801,11 +801,13 @@ def get_clean_name(name):
     clean = re.sub(r"\s+", " ", clean).strip()
     return clean.lower()
 
+# 👇 SIMPLE AUTO INDEX (Only Text Message) 👇
+
 @Client.on_message(filters.chat(CHANNELS) & (filters.document | filters.video | filters.audio))
 async def auto_index(client, message):
     try:
         # ==========================================
-        # PART 1: SAVE TO DATABASE
+        # PART 1: SAVE TO DATABASE (Standard)
         # ==========================================
         media = getattr(message, message.media.value)
         file_id, file_ref = unpack_new_file_id(media.file_id)
@@ -826,58 +828,44 @@ async def auto_index(client, message):
             },
             upsert=True
         )
-        logger.info(f"✅ Auto Index Step 1 OK: File Saved to DB -> {file_name}")
+        logger.info(f"✅ DB Save Success: {file_name}")
 
         # ==========================================
-        # PART 2: SMART CHANNEL UPDATE
+        # PART 2: SIMPLE TEXT UPDATE (No Edit, Just Send)
         # ==========================================
         
         if not UPDATES_CHANNEL:
-            logger.error("❌ Auto Index Step 2 FAILED: UPDATES_CHANNEL ID is Missing!")
             return 
 
+        # 1. Clean Name (Remove unwanted tags)
         clean_name = get_clean_name(file_name)
-        files, _, _ = await get_search_results(clean_name, max_results=10)
-        
-        if files:
-            btn = []
-            for file in files:
-                f_name = file.file_name
-                f_size = get_size(file.file_size)
-                link = f"https://t.me/{temp.U_NAME}?start=filep_{file.file_id}" 
-                btn.append([InlineKeyboardButton(f"📁 {f_name[:20]}... [{f_size}]", url=link)])
+        file_size = get_size(media.file_size)
 
-            caption = (
-                f"<b>✨ NEW FILE ADDED ✨</b>\n\n"
-                f"<b>🎬 Title:</b> {clean_name.upper()}\n"
-                f"<b>📂 Total Files:</b> {len(files)}\n\n"
-                f"<i>👇 Select your quality below 👇</i>"
+        # 2. Simple Caption
+        caption = (
+            f"<b>📂 New File Uploaded!</b>\n\n"
+            f"<b>🎬 Name:</b> {clean_name}\n"
+            f"<b>💾 Size:</b> {file_size}\n"
+            f"<b>📁 Original Name:</b> <code>{file_name}</code>\n\n"
+            f"<i>Get this file from the bot! 👇</i>"
+        )
+
+        # 3. Direct Button (To Bot)
+        btn = [[InlineKeyboardButton("📥 Get File", url=f"https://t.me/{temp.U_NAME}?start=filep_{file_id}")]]
+
+        # 4. Send Message (Only Text)
+        try:
+            await client.send_message(
+                chat_id=UPDATES_CHANNEL,
+                text=caption,
+                reply_markup=InlineKeyboardMarkup(btn)
             )
-
-            updated = False
-            try:
-                async for msg in client.get_chat_history(UPDATES_CHANNEL, limit=20):
-                    if msg.caption and clean_name.upper() in msg.caption:
-                        await msg.edit_caption(caption=caption, reply_markup=InlineKeyboardMarkup(btn))
-                        updated = True
-                        logger.info(f"✅ Auto Index Step 3: Updated Post for {clean_name}")
-                        break
-            except Exception as e:
-                logger.error(f"⚠️ Edit Error: {e}")
-
-            if not updated:
-                try:
-                    poster = random.choice(PICS) if PICS else None
-                    if poster:
-                        await client.send_photo(chat_id=UPDATES_CHANNEL, photo=poster, caption=caption, reply_markup=InlineKeyboardMarkup(btn))
-                    else:
-                        await client.send_message(chat_id=UPDATES_CHANNEL, text=caption, reply_markup=InlineKeyboardMarkup(btn))
-                    logger.info(f"✅ Auto Index Step 3: Created New Post for {clean_name}")
-                except Exception as e:
-                    logger.error(f"❌ Sending Failed: {e}")
+            logger.info(f"✅ Post Sent to Channel: {clean_name}")
+        except Exception as e:
+            logger.error(f"❌ Sending Failed: {e}")
 
     except Exception as e:
-        logger.error(f"❌ Critical Error: {e}")
+        logger.error(f"❌ Error: {e}")
 
 # 👆👆 CODE END 👆👆
 
