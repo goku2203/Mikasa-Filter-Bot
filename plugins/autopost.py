@@ -13,46 +13,48 @@ logger = logging.getLogger(__name__)
 BATCH_DATA = {}
 BATCH_TASKS = {} 
 
-# --- SUPER AGGRESSIVE CLEANER ---
+# --- 1. SUPER CLEANER (THE FIX) ---
 
 def get_clean_name(name):
-    # 1. Basic Cleaning
+    # 1. Lowercase & Basic Clean
     clean = name.lower()
     
-    # 2. Remove Extensions
+    # 2. Remove File Extension (.mkv, .mp4)
     clean = re.sub(r'\.(mkv|mp4|avi|flv|webm)$', '', clean)
     
-    # 3. Remove Year
+    # 3. Remove Year (1990-2029)
     clean = re.sub(r'\b(19|20)\d{2}\b', '', clean)
     
-    # 4. Remove Channel Names & Specific Junk
-    junk_phrases = ["goku stark", "@goku_stark", "trollmaa", "dd+5", "dd5.1", "dd5", "dd+"]
-    for junk in junk_phrases:
+    # 4. Remove Channel Names (Add your channel names here)
+    junk_channels = ["@goku_stark", "goku stark", "trollmaa", "backup - tamil movies"]
+    for junk in junk_channels:
         clean = clean.replace(junk, "")
 
-    # 5. Remove BRACKETS and everything inside them [] () {}
-    clean = re.sub(r'\[.*?\]', '', clean)
-    clean = re.sub(r'\(.*?\)', '', clean)
-    clean = re.sub(r'\{.*?\}', '', clean)
+    # 5. Remove Sizes (400mb, 1.4gb)
+    clean = re.sub(r'\b\d{3,4}mb\b', '', clean)
+    clean = re.sub(r'\b\d+(\.\d+)?gb\b', '', clean)
 
-    # 6. Remove Quality & Audio Keywords (Aggressive Regex)
-    keywords = [
-        "tamil", "telugu", "hindi", "malayalam", "kannada", "english", "eng", "tam", "tel", "hin",
-        "hq", "hdrip", "bluray", "web-dl", "web", "hd", "cam", "predvd", "dvdscr", "rip",
-        "1080p", "720p", "480p", "2160p", "4k", "5.1", "aac", "x264", "x265", "hevc", "esub", "sub",
-        "remastered", "bd", "dual", "multi", "audio", "proper", "true", "avc", "e", "mb", "gb"
-    ]
-    # Remove standalone words
-    for word in keywords:
+    # 6. Remove Quality (1080p, 720p...)
+    clean = re.sub(r'\b(2160p|4k|1080p|720p|480p|360p|hdrip|hq|hd|bd|bluray|web-dl|web)\b', '', clean)
+
+    # 7. Remove Audio/Codec Junk (Dd+5, Dd5.1, AAC, etc.)
+    # This specifically fixes "Dd+5", "Dd5 1" issues
+    clean = re.sub(r'\b(dd\+?5\.?1?|dd\+?|aac|ac3|eac3|dts|esub|sub)\b', '', clean)
+
+    # 8. Remove "Proper", "True", "AVC", "Remastered"
+    junk_words = ["proper", "true", "avc", "remastered", "uncut", "extended", "dual", "multi", "audio", "tamil", "telugu", "hindi", "eng", "english"]
+    for word in junk_words:
         clean = re.sub(r'\b' + re.escape(word) + r'\b', '', clean)
 
-    # 7. Remove Special Characters & Extra Spaces
-    clean = re.sub(r'[-_./@|:+#]', ' ', clean)
-    
-    # 8. Remove Single Letters at end (Like "Leo E" -> "Leo")
+    # 9. Remove ALL Special Characters (Brackets, Dashes, etc.)
+    # This fixes the "Manam [" issue
+    clean = re.sub(r'[\[\]\(\)\{\}\-_./@|:+]', ' ', clean)
+
+    # 10. Remove Single Letters at End (Fixes "Leo E")
     clean = re.sub(r'\s+[a-z]$', '', clean)
 
-    clean = re.sub(r"\s+", " ", clean).strip()
+    # Final Strip
+    clean = re.sub(r'\s+', ' ', clean).strip()
     return clean.title()
 
 def get_year(filename):
@@ -84,11 +86,11 @@ def get_audio(filename):
     if "multi" in filename or "dual" in filename: audio.append("Multi Audio")
     return " - ".join(audio) if audio else "Original Audio"
 
-# --- BATCH SENDER ---
+# --- 2. BATCH SENDER ---
 
 async def send_batched_post(client, clean_name):
     try:
-        # 30 SECONDS WAIT (To confirm grouping)
+        # 30 Seconds Wait (Safe Time)
         await asyncio.sleep(30)
     except asyncio.CancelledError:
         return 
@@ -101,7 +103,7 @@ async def send_batched_post(client, clean_name):
     if clean_name in BATCH_TASKS:
         del BATCH_TASKS[clean_name]
 
-    # Duplicate Removal
+    # Check for Duplicates (Based on Size)
     unique_files = []
     seen_sizes = set()
     for f in raw_files_list:
@@ -148,7 +150,7 @@ async def send_batched_post(client, clean_name):
             caption += "\n"
 
     if not has_files:
-        return # Safety check
+        return
 
     caption += "━━━━━━━━━━━━━━━━━━━\n"
     caption += "<i>(Click the file size to download)</i>"
@@ -161,11 +163,11 @@ async def send_batched_post(client, clean_name):
             text=caption,
             reply_markup=InlineKeyboardMarkup(channel_btn)
         )
-        logger.info(f"✅ Group Post Sent: {movie_name}")
+        logger.info(f"✅ Post Sent: {movie_name}")
     except Exception as e:
         logger.error(f"❌ Post Failed: {e}")
 
-# --- MAIN LISTENER ---
+# --- 3. MAIN LISTENER ---
 
 @Client.on_message(filters.chat(CHANNELS) & (filters.document | filters.video | filters.audio))
 async def media_handler(client, message):
@@ -184,7 +186,7 @@ async def media_handler(client, message):
         if not UPDATES_CHANNEL:
             return
 
-        # Use Aggressive Cleaner
+        # THIS IS THE KEY: CLEAN NAME
         clean_name = get_clean_name(file_name)
         
         file_data = {
@@ -201,14 +203,14 @@ async def media_handler(client, message):
             BATCH_DATA[clean_name] = []
         BATCH_DATA[clean_name].append(file_data)
 
+        # Reset Timer on new file
         if clean_name in BATCH_TASKS:
             BATCH_TASKS[clean_name].cancel()
 
-        # Increased Timer to 30 Seconds
         task = asyncio.create_task(send_batched_post(client, clean_name))
         BATCH_TASKS[clean_name] = task
         
-        logger.info(f"⏳ Processing: {clean_name} (Waiting 30s)")
+        logger.info(f"⏳ Grouping: {clean_name} (30s Wait)")
 
     except Exception as e:
         logger.error(f"❌ Error: {e}")
