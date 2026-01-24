@@ -19,15 +19,13 @@ def get_year(filename):
     match = re.search(r'\b(19|20)\d{2}\b', filename)
     return match.group(0) if match else "N/A"
 
-# This determines the "Header" (Ex: FULL HD, 4K)
 def get_quality_category(filename):
     filename = filename.lower()
     if "2160p" in filename or "4k" in filename: return "4K"
     if "1080p" in filename: return "FULL HD"
     if "720p" in filename: return "Only HD"
-    return "HD-Rip" # Default for 480p, 360p, etc.
+    return "HD-Rip" 
 
-# This determines the Link Text (Ex: FHD, HD)
 def get_quality_short(filename):
     filename = filename.lower()
     if "2160p" in filename or "4k" in filename: return "4K"
@@ -49,16 +47,15 @@ def get_audio(filename):
     return " - ".join(audio) if audio else "Original Audio"
 
 def get_clean_name(name):
-    # Standard Google-Style Cleaning
     clean = name.lower()
-    # Remove file extension
+    # Remove Extension
     clean = re.sub(r'\.(mkv|mp4|avi|flv|webm)$', '', clean)
     # Remove Year
     clean = re.sub(r'\b(19|20)\d{2}\b', '', clean)
-    # Remove brackets
+    # Remove Brackets
     clean = re.sub(r'\[.*?\]', '', clean)
     clean = re.sub(r'\(.*?\)', '', clean)
-    # Remove junk keywords
+    # Remove Keywords
     keywords = [
         "tamil", "telugu", "hindi", "malayalam", "kannada", "english", "eng", "tam", "tel", "hin",
         "hq", "hdrip", "bluray", "web-dl", "web", "hd", "cam", "predvd", "dvdscr", "rip",
@@ -68,16 +65,16 @@ def get_clean_name(name):
     for word in keywords:
         clean = re.sub(r'\b' + re.escape(word) + r'\b', '', clean)
     
-    # Remove special chars and extra space
     clean = re.sub(r'[-_./@|]', ' ', clean)
     clean = re.sub(r"\s+", " ", clean).strip()
     return clean.title()
 
-# --- 2. BATCH SENDER (Group by Category) ---
+# --- 2. BATCH SENDER ---
 
 async def send_batched_post(client, clean_name):
     try:
-        await asyncio.sleep(10) # Wait for all files
+        # INCREASED WAIT TIME TO 20 SECONDS (To fix grouping issue)
+        await asyncio.sleep(20) 
     except asyncio.CancelledError:
         return 
 
@@ -89,7 +86,7 @@ async def send_batched_post(client, clean_name):
     if clean_name in BATCH_TASKS:
         del BATCH_TASKS[clean_name]
 
-    # Remove Duplicates (Same Size)
+    # Remove Duplicates
     unique_files = []
     seen_sizes = set()
     for f in raw_files_list:
@@ -100,30 +97,22 @@ async def send_batched_post(client, clean_name):
     if not unique_files:
         return
 
-    # --- CATEGORIZE FILES ---
-    # We create buckets for each quality
-    categorized = {
-        "4K": [],
-        "FULL HD": [],
-        "Only HD": [],
-        "HD-Rip": []
-    }
-
-    # Fill the buckets
+    # Categorize
+    categorized = { "4K": [], "FULL HD": [], "Only HD": [], "HD-Rip": [] }
     first_file = unique_files[0]
+    
     for file in unique_files:
         cat = file['category']
         if cat in categorized:
             categorized[cat].append(file)
         else:
-            categorized["HD-Rip"].append(file) # Fallback
+            categorized["HD-Rip"].append(file)
 
-    # --- BUILD CAPTION ---
+    # --- BUILD CAPTION (Removed Original Name) ---
     movie_name = clean_name
     year = first_file['year']
     audio = first_file['audio']
 
-    # Header
     caption = (
         f"🎬 <b>{movie_name}</b>\n"
         f"🗓️ <b>Year:</b> {year}\n"
@@ -131,22 +120,15 @@ async def send_batched_post(client, clean_name):
         f"━━━━━━━━━━━━━━━━━━━\n"
     )
 
-    # Loop through Categories in Order
-    order = ["HD-Rip", "Only HD", "FULL HD", "4K"] # Neenga ketta order (Small to Big or Big to Small maathikalam)
-    
-    # Or if you want "HD-Rip" first as in your example:
-    # Example order: HD-Rip -> Only HD -> FULL HD -> 4K
+    order = ["HD-Rip", "Only HD", "FULL HD", "4K"]
     
     for category in order:
         files = categorized[category]
         if files:
-            # Add Category Header
             caption += f"<b>{category}</b>\n"
-            # Add Files
             for f in files:
-                # Format: 📂 HD - 3GB
                 caption += f"📂 <a href='{f['link']}'><b>{f['short_q']} - {f['size']}</b></a>\n"
-            caption += "\n" # Small space between categories
+            caption += "\n"
 
     caption += "━━━━━━━━━━━━━━━━━━━\n"
     caption += "<i>(Click the file size to download)</i>"
@@ -185,12 +167,11 @@ async def media_handler(client, message):
 
         clean_name = get_clean_name(file_name)
         
-        # Collect all info needed for sorting
         file_data = {
             'name': clean_name,
             'year': get_year(file_name),
-            'category': get_quality_category(file_name), # For Group Header
-            'short_q': get_quality_short(file_name),     # For Link Text
+            'category': get_quality_category(file_name),
+            'short_q': get_quality_short(file_name),
             'audio': get_audio(file_name),
             'size': get_size(media.file_size),
             'link': f"https://t.me/{temp.U_NAME}?start=filep_{file_id}"
@@ -206,7 +187,7 @@ async def media_handler(client, message):
         task = asyncio.create_task(send_batched_post(client, clean_name))
         BATCH_TASKS[clean_name] = task
         
-        logger.info(f"⏳ Processing: {clean_name}")
+        logger.info(f"⏳ Processing: {clean_name} (Waiting 20s)")
 
     except Exception as e:
         logger.error(f"❌ Error: {e}")
