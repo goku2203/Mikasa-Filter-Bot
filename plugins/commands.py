@@ -832,24 +832,20 @@ async def auto_index(client, message):
             },
             upsert=True
         )
-        # Logger message to confirm Step 1
         logger.info(f"✅ Auto Index Step 1 OK: File Saved to DB -> {file_name}")
 
         # ==========================================
         # PART 2: SMART CHANNEL UPDATE
         # ==========================================
         
-        # Check if UPDATES_CHANNEL is set
         if not UPDATES_CHANNEL:
-            logger.error("❌ Auto Index Step 2 FAILED: UPDATES_CHANNEL ID is Missing in info.py or Render!")
+            logger.error("❌ Auto Index Step 2 FAILED: UPDATES_CHANNEL ID is Missing!")
             return 
 
-        # Clean Name & Search DB
         clean_name = get_clean_name(file_name)
         files, _, _ = await get_search_results(clean_name, max_results=10)
         
         if files:
-            # Create Buttons
             btn = []
             for file in files:
                 f_name = file.file_name
@@ -857,7 +853,6 @@ async def auto_index(client, message):
                 link = f"https://t.me/{temp.U_NAME}?start=filep_{file.file_id}" 
                 btn.append([InlineKeyboardButton(f"📁 {f_name[:20]}... [{f_size}]", url=link)])
 
-            # Create Caption
             caption = (
                 f"<b>✨ NEW FILE ADDED ✨</b>\n\n"
                 f"<b>🎬 Title:</b> {clean_name.upper()}\n"
@@ -865,42 +860,30 @@ async def auto_index(client, message):
                 f"<i>👇 Select your quality below 👇</i>"
             )
 
-            # Smart Update (Edit Old or Send New)
             updated = False
             try:
-                # Check last 20 messages for same movie
                 async for msg in client.get_chat_history(UPDATES_CHANNEL, limit=20):
                     if msg.caption and clean_name.upper() in msg.caption:
                         await msg.edit_caption(caption=caption, reply_markup=InlineKeyboardMarkup(btn))
                         updated = True
-                        logger.info(f"✅ Auto Index Step 3: Updated Existing Post for {clean_name}")
+                        logger.info(f"✅ Auto Index Step 3: Updated Post for {clean_name}")
                         break
             except Exception as e:
-                logger.error(f"⚠️ Auto Index Edit Error (Check Admin Rights): {e}")
+                logger.error(f"⚠️ Edit Error: {e}")
 
-            # If no old message found, Send New
             if not updated:
                 try:
                     poster = random.choice(PICS) if PICS else None
                     if poster:
-                        await client.send_photo(
-                            chat_id=UPDATES_CHANNEL,
-                            photo=poster,
-                            caption=caption,
-                            reply_markup=InlineKeyboardMarkup(btn)
-                        )
+                        await client.send_photo(chat_id=UPDATES_CHANNEL, photo=poster, caption=caption, reply_markup=InlineKeyboardMarkup(btn))
                     else:
-                        await client.send_message(
-                            chat_id=UPDATES_CHANNEL,
-                            text=caption,
-                            reply_markup=InlineKeyboardMarkup(btn)
-                        )
-                    logger.info(f"✅ Auto Index Step 3: New Post Created for {clean_name}")
+                        await client.send_message(chat_id=UPDATES_CHANNEL, text=caption, reply_markup=InlineKeyboardMarkup(btn))
+                    logger.info(f"✅ Auto Index Step 3: Created New Post for {clean_name}")
                 except Exception as e:
-                    logger.error(f"❌ Auto Index Sending Failed! Error: {e}")
+                    logger.error(f"❌ Sending Failed: {e}")
 
     except Exception as e:
-        logger.error(f"❌ Critical Auto Index Error: {e}")
+        logger.error(f"❌ Critical Error: {e}")
 
 # 👆👆 CODE END 👆👆
 
