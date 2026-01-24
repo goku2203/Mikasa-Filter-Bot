@@ -1,27 +1,21 @@
+# plugins/commands.py - FULL CLEAN CODE
 import os
 import logging
 import random
 import asyncio
-from Script import script
-from pyrogram import Client, filters, enums
-from pyrogram.errors import ChatAdminRequired, FloodWait
-from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
-from database.ia_filterdb import Media, get_file_details, unpack_new_file_id
-from database.users_chats_db import db
-from info import CHANNELS, ADMINS, LOG_CHANNEL, PICS, BATCH_FILE_CAPTION, CUSTOM_FILE_CAPTION, PROTECT_CONTENT, FILE_CHANNELS, FILE_CHANNEL_SENDING_MODE, FILE_AUTO_DELETE_SECONDS, IS_VERIFY
-from utils import get_settings, get_size, is_subscribed, save_group_settings, temp, create_invite_links, get_verify_link, check_verification, verify_user
-from database.connections_mdb import active_connection
 import re
 import json
-from pyrogram.types import Message
 import base64
 from datetime import datetime, timedelta
-# 👇 IMPORTANT IMPORTS (Top-la iruntha okay, illana ingaye irukkattum)
-import re
-from pyrogram.errors import MessageNotModified
-from database.ia_filterdb import Media, get_search_results, unpack_new_file_id
-from info import UPDATES_CHANNEL, CHANNELS, PICS
-from utils import get_size
+from Script import script
+from pyrogram import Client, filters, enums
+from pyrogram.errors import ChatAdminRequired, FloodWait, MessageNotModified
+from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
+from database.ia_filterdb import Media, get_file_details, unpack_new_file_id, get_search_results
+from database.users_chats_db import db
+from info import CHANNELS, ADMINS, LOG_CHANNEL, PICS, BATCH_FILE_CAPTION, CUSTOM_FILE_CAPTION, PROTECT_CONTENT, FILE_CHANNELS, FILE_CHANNEL_SENDING_MODE, FILE_AUTO_DELETE_SECONDS, IS_VERIFY, UPDATES_CHANNEL
+from utils import get_settings, get_size, is_subscribed, save_group_settings, temp, create_invite_links, get_verify_link, check_verification, verify_user
+from database.connections_mdb import active_connection
 
 logger = logging.getLogger(__name__)
 
@@ -31,15 +25,12 @@ AUTO_DELETE_SECONDS = 15
 # Helper function to create buttons for specific channel
 async def create_file_buttons(client, sent_message):
     buttons = []
-    
-    # Create message link
     if sent_message.chat.username:
         message_link = f"https://t.me/{sent_message.chat.username}/{sent_message.id}"
     else:
         channel_id = str(sent_message.chat.id).replace('-100', '')
         message_link = f"https://t.me/c/{channel_id}/{sent_message.id}"
     
-    # Create invite link only for this channel
     try:
         chat = await client.get_chat(sent_message.chat.id)
         if chat.username:
@@ -60,7 +51,6 @@ async def create_file_buttons(client, sent_message):
     
     return InlineKeyboardMarkup(buttons)
 
-# Auto-delete helpers
 async def auto_delete_message(client, message, delay):
     await asyncio.sleep(delay)
     try:
@@ -76,11 +66,8 @@ async def auto_delete_file(client, message, delay):
     except Exception as e:
         logger.error(f"Error deleting file: {e}")
 
-# 👇👇 UPDATED FUNCTION WITH 2 MIN AUTO DELETE 👇👇
-
 async def send_file_to_user(client, user_id, file_id, protect_content_flag, file_name=None, file_size=None, file_caption=None):
     try:
-        # Generate proper caption
         caption = None
         if CUSTOM_FILE_CAPTION:
             try:
@@ -95,9 +82,7 @@ async def send_file_to_user(client, user_id, file_id, protect_content_flag, file
         else:
             caption = file_caption if file_caption else file_name
 
-        # File sending logic
         if FILE_CHANNEL_SENDING_MODE and FILE_CHANNELS:
-            # Channel sending logic (Already unga code la irukura maari)
             channel_id = random.choice(FILE_CHANNELS)
             sent_message = await client.send_cached_media(
                 chat_id=channel_id,
@@ -105,7 +90,6 @@ async def send_file_to_user(client, user_id, file_id, protect_content_flag, file
                 caption=caption,
                 protect_content=protect_content_flag
             )
-            # Schedule auto-delete for channel file
             asyncio.create_task(auto_delete_file(client, sent_message, FILE_AUTO_DELETE_SECONDS))
             
             reply_markup = await create_file_buttons(client, sent_message)
@@ -118,22 +102,16 @@ async def send_file_to_user(client, user_id, file_id, protect_content_flag, file
             )
             asyncio.create_task(auto_delete_message(client, user_msg, AUTO_DELETE_SECONDS))
         else:
-            # 👇 INGA THAAN CHANGE PANNI IRUKKEN 👇
-            # Fallback to direct send with caption
             msg = await client.send_cached_media(
                 chat_id=user_id,
                 file_id=file_id,
                 caption=caption,
                 protect_content=protect_content_flag,
             )
-            
-            # 2 Minutes (120 Seconds) Auto Delete Task Add Panniachu
-            # Ithu Automatic-a antha file-a delete pannidum.
             asyncio.create_task(auto_delete_file(client, msg, 120)) 
             
     except Exception as e:
         logger.error(f"File send error: {e}")
-        # Error handling la yum auto delete add panrom
         msg = await client.send_cached_media(
             chat_id=user_id,
             file_id=file_id,
@@ -142,24 +120,18 @@ async def send_file_to_user(client, user_id, file_id, protect_content_flag, file
         )
         asyncio.create_task(auto_delete_file(client, msg, 120))
 
-# 👆👆 UPDATE MUDINJATHU 👆👆
-
 @Client.on_callback_query(filters.regex(r'^checksubp#') | filters.regex(r'^checksub#'))
 async def checksub_callback(client, callback_query):
-    # Extract data from callback
     data = callback_query.data
     pre, file_id = data.split('#', 1)
     user_id = callback_query.from_user.id
     protect_content_flag = True if pre == 'checksubp' else False
 
-    # Get file details for caption
     files = await get_file_details(file_id)
     file_details = files[0] if files else None
     
-    # Check subscription status
     if await is_subscribed(user_id, client):
         try:
-            # Use helper function to send file via channels with proper caption
             await send_file_to_user(
                 client=client,
                 user_id=user_id,
@@ -174,7 +146,6 @@ async def checksub_callback(client, callback_query):
             logger.error(f"File send error in callback: {e}")
             await callback_query.answer("Failed to send file. Please try again later.", show_alert=True)
     else:
-        # Resend subscription prompt
         links = await create_invite_links(client)
         btn = [[InlineKeyboardButton("🤖 Join Updates Channel", url=url)] for url in links.values()]
         btn.append([InlineKeyboardButton("🔄 Try Again", callback_data=data)])
@@ -217,7 +188,6 @@ async def start(client, message):
              InlineKeyboardButton(f'ᴍᴀɪɴ ᴄʜᴀɴɴᴇʟ', url='https://t.me/goku_stark')
         ],[
             InlineKeyboardButton('⚡ Contact Admin', url='https://t.me/Tamilmovieslink_bot'),
-            # 👇 INTHA LINE AH ADD PANNUNGA 👇
             InlineKeyboardButton('💎 Premium Plans', callback_data='see_plans')
          ]]
         reply_markup = InlineKeyboardMarkup(buttons)
@@ -252,7 +222,6 @@ async def start(client, message):
         return
 
     if len(message.command) == 2 and message.command[1] in ["subscribe", "error", "okay", "help"]:
-        # (Help logic same as above, omitted for brevity but keeping return)
         buttons = [[InlineKeyboardButton('ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘs', url=f'http://t.me/{temp.U_NAME}?startgroup=true')],[InlineKeyboardButton('ʜᴇʟᴘ', callback_data='help'),InlineKeyboardButton('ᴀʙᴏᴜᴛ', callback_data='about')],[InlineKeyboardButton(f'Anime Channel​', url='https://t.me/Anime_single'),InlineKeyboardButton(f'ᴍᴀɪɴ ᴄʜᴀɴɴᴇʟ', url='https://t.me/goku_stark')]]
         reply_markup = InlineKeyboardMarkup(buttons)
         await message.reply_photo(photo=random.choice(PICS), caption=script.START_TXT.format(message.from_user.mention, temp.U_NAME, temp.B_NAME), reply_markup=reply_markup, parse_mode=enums.ParseMode.HTML)
@@ -265,21 +234,15 @@ async def start(client, message):
         await auto_filter(client, message) 
         return
 
-    # ==================================================================
-    # 👇👇 VERIFY & AUTO SEND LOGIC (Updated) 👇👇
-    # ==================================================================
-
-    # 1. Check if user completed verification (Returned from shortener)
     if len(message.command) == 2 and message.command[1].startswith('verify_'):
         try:
             link_parts = message.command[1].split("_", 2)
             check_id = link_parts[1]
             
             if str(message.from_user.id) == check_id:
-                await verify_user(message.from_user.id) # Update DB (2 mins valid)
+                await verify_user(message.from_user.id)
                 await message.reply_text("<b>✅ Verification Successful!</b>\n\n<i>File Uploading... Please wait...</i>", protect_content=True)
                 
-                # If file ID exists, replace command and continue
                 if len(link_parts) > 2:
                     message.command[1] = link_parts[2]
                 else:
@@ -291,23 +254,17 @@ async def start(client, message):
             print(f"Verify Error: {e}")
             return
 
-    # 2. Assign data
     data = message.command[1]
 
-    # 3. Check Verification Status (Verify Pannitala nu parkirom)
-   # 👇👇 UPDATED VERIFY CODE (Name & Size Bold) 👇👇
     if IS_VERIFY:
         if not await check_verification(client, message.from_user.id):
             
-            # Verify Link Generate
             verify_url = await get_verify_link(message.from_user.id, data)
             
-            # --- FILE DETAILS EDUKKURA LOGIC START ---
             file_name = "Requested File"
             file_size = "Unknown"
             
             try:
-                # Data la irunthu File ID-a clean-a edukkurom
                 if "_" in data:
                     try:
                         _, temp_file_id = data.split('_', 1)
@@ -316,22 +273,18 @@ async def start(client, message):
                 else:
                     temp_file_id = data
 
-                # Database la search panrom
                 files_ = await get_file_details(temp_file_id)
                 if files_:
                     file_name = files_[0].file_name
                     file_size = get_size(files_[0].file_size)
             except Exception as e:
                 print(f"Error getting file details: {e}")
-            # --- FILE DETAILS LOGIC END ---
 
             buttons = [
                 [InlineKeyboardButton("Click Here To Verify 🟢", url=verify_url)],
                 [InlineKeyboardButton("How to Download 📥", url="https://t.me/howtoo1/3")]
             ]
             
-            # Inga thaan Text-a BOLD-a maathi irukken (Using <b> tag)
-            # 👇 Message-a 'verify_msg' nu oru variable-la store panrom
             verify_msg = await message.reply_text(
                 text=f"<b>⚠️ நீங்க இன்னும் Verify பண்ணல!</b>\n\n"
                      f"<b>📂 File: {file_name}</b>\n"
@@ -341,15 +294,8 @@ async def start(client, message):
                 protect_content=True
             )
             
-            # 👇 3 Hours (10800 Seconds) kalichu Delete aaga solrom
             asyncio.create_task(auto_delete_message(client, verify_msg, 10800))
             return
-
-    # 👆👆 UPDATE MUDINJATHU 👆👆
-    
-    # ==================================================================
-    # 👆👆 VERIFY LOGIC END 👆👆
-    # ==================================================================
 
     try:
         pre, file_id = data.split('_', 1)
@@ -358,14 +304,8 @@ async def start(client, message):
         pre = ""
     
     if data.split("-", 1)[0] == "BATCH":
-        # ... (Batch Logic continues as usual) ...
-        # (Neenga anuppuna code-la irukra batch logic inga varum)
         sts = await message.reply("Please wait")
         file_id = data.split("-", 1)[1]
-        # ... (Batch code continue...)
-        # Note: Naan full batch code inga type pannala, unga pazhaya code la irukatha apdiye maintain pannunga.
-        # Verify mattum than mela fix panni irukken.
-        
         msgs = BATCH_FILES.get(file_id)
         if not msgs:
             file = await client.download_media(file_id)
@@ -463,7 +403,6 @@ async def start(client, message):
         try:
             protect_content_flag = True if pre == 'filep' else False
             
-            # Use helper function for consistent file sending
             await send_file_to_user(
                 client=client,
                 user_id=message.from_user.id,
@@ -489,7 +428,6 @@ async def start(client, message):
     
     protect_content_flag = True if pre == 'filep' else False
     
-    # Use helper function for consistent file sending - FIXED: Removed 'caption' parameter
     await send_file_to_user(
         client=client,
         user_id=message.from_user.id,
@@ -801,91 +739,19 @@ def get_clean_name(name):
     clean = re.sub(r"\s+", " ", clean).strip()
     return clean.lower()
 
-# 👇 SIMPLE AUTO INDEX (Only Text Message) 👇
-
-@Client.on_message(filters.chat(CHANNELS) & (filters.document | filters.video | filters.audio))
-async def auto_index(client, message):
-    try:
-        # ==========================================
-        # PART 1: SAVE TO DATABASE (Standard)
-        # ==========================================
-        media = getattr(message, message.media.value)
-        file_id, file_ref = unpack_new_file_id(media.file_id)
-        file_name = media.file_name
-        
-        await Media.update_one(
-            {'file_id': file_id},
-            {
-                '$set': {
-                    'file_id': file_id,
-                    'file_ref': file_ref,
-                    'file_name': file_name,
-                    'file_size': media.file_size,
-                    'file_type': message.media.value,
-                    'mime_type': media.mime_type,
-                    'caption': message.caption.html if message.caption else None,
-                }
-            },
-            upsert=True
-        )
-        logger.info(f"✅ DB Save Success: {file_name}")
-
-        # ==========================================
-        # PART 2: SIMPLE TEXT UPDATE (No Edit, Just Send)
-        # ==========================================
-        
-        if not UPDATES_CHANNEL:
-            return 
-
-        # 1. Clean Name (Remove unwanted tags)
-        clean_name = get_clean_name(file_name)
-        file_size = get_size(media.file_size)
-
-        # 2. Simple Caption
-        caption = (
-            f"<b>📂 New File Uploaded!</b>\n\n"
-            f"<b>🎬 Name:</b> {clean_name}\n"
-            f"<b>💾 Size:</b> {file_size}\n"
-            f"<b>📁 Original Name:</b> <code>{file_name}</code>\n\n"
-            f"<i>Get this file from the bot! 👇</i>"
-        )
-
-        # 3. Direct Button (To Bot)
-        btn = [[InlineKeyboardButton("📥 Get File", url=f"https://t.me/{temp.U_NAME}?start=filep_{file_id}")]]
-
-        # 4. Send Message (Only Text)
-        try:
-            await client.send_message(
-                chat_id=UPDATES_CHANNEL,
-                text=caption,
-                reply_markup=InlineKeyboardMarkup(btn)
-            )
-            logger.info(f"✅ Post Sent to Channel: {clean_name}")
-        except Exception as e:
-            logger.error(f"❌ Sending Failed: {e}")
-
-    except Exception as e:
-        logger.error(f"❌ Error: {e}")
-
-# 👆👆 CODE END 👆👆
-
-# 👇👇 NEW PREMIUM PLAN COMMAND 👇👇
-
 @Client.on_message(filters.command("plan") & filters.private)
 async def premium_plans(client, message):
     try:
-        # 1. Payment Link (Unga UPI ID illana Payment Gateway Link inga podunga)
-        # Example: "https://upi.link/unga_id" allathu "upi://pay?pa=unga_upi_id@okaxis&pn=BotAdmin"
-        payment_link = "https://upi.pe/gokula8@ibl" # Ippo Admin link potrukken, neenga maathikkonga
+        # 1. Payment Link
+        payment_link = "https://upi.pe/gokula8@ibl" 
 
-        # 2. Admin Contact Link (Screenshot Anuppa)
-        # "Gokulakrishnan" enkira idathula unga Telegram Username podunga
+        # 2. Admin Contact Link
         admin_link = "https://t.me/Screenshot_gk_bot" 
 
-        # 3. Image URL (Plan Banner)
+        # 3. Image URL
         plan_image = "https://i.ibb.co/YFFY84YX/photo.jpg"
 
-        # 4. Stylish Caption (Neenga sonna Pricing)
+        # 4. Stylish Caption
         caption = (
             "<b>💎 PREMIUM PLANS & PRICING 💎</b>\n\n"
             "Bot-a <b>Ads illama</b>, <b>High Speed-la</b> use panna virumbureengala?\n"
@@ -923,4 +789,82 @@ async def premium_plans(client, message):
     except Exception as e:
         print(f"Plan Command Error: {e}")
 
-# 👆👆 CODE END 👆👆
+# 👇 THIS IS THE ONLY AUTO INDEX FUNCTION (PASTE AT BOTTOM) 👇
+
+@Client.on_message(filters.chat(CHANNELS) & (filters.document | filters.video | filters.audio))
+async def auto_index(client, message):
+    try:
+        # ==========================================
+        # PART 1: SAVE TO DATABASE
+        # ==========================================
+        media = getattr(message, message.media.value)
+        file_id, file_ref = unpack_new_file_id(media.file_id)
+        file_name = media.file_name
+        
+        await Media.update_one(
+            {'file_id': file_id},
+            {
+                '$set': {
+                    'file_id': file_id,
+                    'file_ref': file_ref,
+                    'file_name': file_name,
+                    'file_size': media.file_size,
+                    'file_type': message.media.value,
+                    'mime_type': media.mime_type,
+                    'caption': message.caption.html if message.caption else None,
+                }
+            },
+            upsert=True
+        )
+        logger.info(f"✅ Auto Index Step 1 OK: File Saved to DB -> {file_name}")
+
+        # ==========================================
+        # PART 2: SMART CHANNEL UPDATE
+        # ==========================================
+        
+        if not UPDATES_CHANNEL:
+            logger.error("❌ Auto Index Step 2 FAILED: UPDATES_CHANNEL ID is Missing!")
+            return 
+
+        clean_name = get_clean_name(file_name)
+        files, _, _ = await get_search_results(clean_name, max_results=10)
+        
+        if files:
+            btn = []
+            for file in files:
+                f_name = file.file_name
+                f_size = get_size(file.file_size)
+                link = f"https://t.me/{temp.U_NAME}?start=filep_{file.file_id}" 
+                btn.append([InlineKeyboardButton(f"📁 {f_name[:20]}... [{f_size}]", url=link)])
+
+            caption = (
+                f"<b>✨ NEW FILE ADDED ✨</b>\n\n"
+                f"<b>🎬 Title:</b> {clean_name.upper()}\n"
+                f"<b>📂 Total Files:</b> {len(files)}\n\n"
+                f"<i>👇 Select your quality below 👇</i>"
+            )
+
+            updated = False
+            try:
+                async for msg in client.get_chat_history(UPDATES_CHANNEL, limit=20):
+                    if msg.caption and clean_name.upper() in msg.caption:
+                        await msg.edit_caption(caption=caption, reply_markup=InlineKeyboardMarkup(btn))
+                        updated = True
+                        logger.info(f"✅ Auto Index Step 3: Updated Post for {clean_name}")
+                        break
+            except Exception as e:
+                logger.error(f"⚠️ Edit Error: {e}")
+
+            if not updated:
+                try:
+                    poster = random.choice(PICS) if PICS else None
+                    if poster:
+                        await client.send_photo(chat_id=UPDATES_CHANNEL, photo=poster, caption=caption, reply_markup=InlineKeyboardMarkup(btn))
+                    else:
+                        await client.send_message(chat_id=UPDATES_CHANNEL, text=caption, reply_markup=InlineKeyboardMarkup(btn))
+                    logger.info(f"✅ Auto Index Step 3: Created New Post for {clean_name}")
+                except Exception as e:
+                    logger.error(f"❌ Sending Failed: {e}")
+
+    except Exception as e:
+        logger.error(f"❌ Critical Error: {e}")
