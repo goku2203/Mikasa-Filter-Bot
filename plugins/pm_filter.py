@@ -130,7 +130,7 @@ async def next_page(bot, query):
             ]
         )
 # 👇 INTHA LINE AH INGA ADD PANNUNGA 👇
-    btn.append([InlineKeyboardButton("How to Link Download 📥", url="https://t.me/howtoo1/3")])
+    btn.append([InlineKeyboardButton("📝 Request Movie 📝", url="https://t.me/Tamilmovieslink_bot")])
     # 👆 MELA IRUKKURATHA ADD PANNUNGA 👆
     try:
         if HYPER_MODE:
@@ -827,7 +827,7 @@ async def auto_filter(client, msg, spoll=False):
             btn.append([InlineKeyboardButton(text="📃 1/1", callback_data="pages")])
             
     # 👇 REQUEST BUTTON (Add Panniachu) 👇
-    btn.append([InlineKeyboardButton("📝 Request Movie / Series 📝", url="https://t.me/Tamilmovieslink_bot")])
+    btn.append([InlineKeyboardButton("📝 Request Movie 📝", url="https://t.me/Tamilmovieslink_bot")])
     
     imdb = await get_poster(search, file=(files[0]).file_name) if settings["imdb"] else None
     TEMPLATE = settings['template']
