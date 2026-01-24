@@ -8,6 +8,7 @@ from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from info import ADMINS, LOG_CHANNEL, CHANNELS, UPDATES_CHANNEL, PICS
 from database.ia_filterdb import save_file, Media, unpack_new_file_id, get_search_results
 from utils import temp, get_size
+from database.users_chats_db import db
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -20,44 +21,40 @@ def get_clean_name(name):
     return clean.lower()
 
 # ====================================================
-# 👇👇 NEW AUTO INDEX & POST LOGIC (ADDED HERE) 👇👇
+# 👇👇 THIS IS THE MAIN AUTO INDEX & POST FUNCTION 👇👇
 # ====================================================
 
 @Client.on_message(filters.chat(CHANNELS) & (filters.document | filters.video | filters.audio))
-async def auto_index_post(client, message):
+async def media(client, message):
     """
     Automatic-a File-a Save pannum & Updates Channel-la Post podum.
     """
     try:
         # 1. Save to Database
-        media = getattr(message, message.media.value)
-        file_id, file_ref = unpack_new_file_id(media.file_id)
-        file_name = media.file_name
-        
-        # Saving using update_one (Safe Method)
-        await Media.update_one(
-            {'file_id': file_id},
-            {
-                '$set': {
-                    'file_id': file_id,
-                    'file_ref': file_ref,
-                    'file_name': file_name,
-                    'file_size': media.file_size,
-                    'file_type': message.media.value,
-                    'mime_type': media.mime_type,
-                    'caption': message.caption.html if message.caption else None,
-                }
-            },
-            upsert=True
-        )
-        logger.info(f"✅ Auto Index: File Saved -> {file_name}")
+        # -------------------
+        for file_type in ("document", "video", "audio"):
+            media = getattr(message, file_type, None)
+            if media is not None:
+                break
+        else:
+            return
+
+        media.file_type = file_type
+        media.caption = message.caption
+
+        # Save File
+        await save_file(media)
+        logger.info(f"✅ Auto Index: File Saved -> {media.file_name}")
 
         # 2. Post to Updates Channel
+        # --------------------------
         if not UPDATES_CHANNEL:
             return
 
+        file_name = media.file_name
         clean_name = get_clean_name(file_name)
         file_size = get_size(media.file_size)
+        file_id = media.file_id
 
         # Simple Caption
         caption = (
@@ -85,8 +82,6 @@ async def auto_index_post(client, message):
     except Exception as e:
         logger.error(f"❌ Auto Index Error: {e}")
 
-# ====================================================
-# 👆👆 AUTO POST LOGIC ENDS 👆👆
 # ====================================================
 # 👇👇 BELOW IS YOUR OLD MANUAL INDEXING CODE 👇👇
 # ====================================================
