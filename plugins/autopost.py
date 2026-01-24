@@ -9,10 +9,9 @@ from utils import temp, get_size
 
 logger = logging.getLogger(__name__)
 
-# --- BATCH STORAGE ---
-# Ingatha files wait pannum
+# --- BATCH STORAGE & TASKS ---
 BATCH_DATA = {}
-BATCH_LOCK = asyncio.Lock()
+BATCH_TASKS = {} # To store running timers
 
 # --- Helper Functions ---
 
@@ -41,44 +40,48 @@ def get_audio(filename):
     return " - ".join(audio) if audio else "Original Audio"
 
 def get_clean_name(name):
-    # Remove junk tags
     clean = re.sub(r"(\[.*?\]|\{.*?\}|\(.*?\)|720p|1080p|480p|2160p|4k|HEVC|x264|x265|mkv|mp4|avi|www\.|@\w+)", "", name, flags=re.IGNORECASE)
-    clean = re.sub(r'\b(19|20)\d{2}\b', '', clean) # Remove year from name
+    clean = re.sub(r'\b(19|20)\d{2}\b', '', clean)
     clean = re.sub(r"\s+", " ", clean).strip()
     return clean
 
-# --- Batch Sender (After 5 Seconds) ---
+# --- Sender Function ---
 
 async def send_batched_post(client, clean_name):
-    # Wait for 5 Seconds (Tag Remover & Grouping)
-    await asyncio.sleep(5)
-    
-    async with BATCH_LOCK:
-        if clean_name not in BATCH_DATA:
-            return
-        files_list = BATCH_DATA.pop(clean_name)
+    # Wait for 10 Seconds (Increased for Tag Remover Bot Latency)
+    try:
+        await asyncio.sleep(10)
+    except asyncio.CancelledError:
+        return # If new file comes, this task is cancelled
 
-    # Sort files by name or quality (Optional)
+    if clean_name not in BATCH_DATA:
+        return
+
+    # Get all files and Clear Dictionary
+    files_list = BATCH_DATA.pop(clean_name)
+    if clean_name in BATCH_TASKS:
+        del BATCH_TASKS[clean_name]
+
+    # Sort files by quality/size (Optional sorting)
     files_list.sort(key=lambda x: x['quality'], reverse=True)
 
     if not files_list:
         return
 
-    # Extract Common Details from first file
+    # Extract Details
     first_file = files_list[0]
     movie_name = first_file['name']
     year = first_file['year']
     audio = first_file['audio']
     year_str = f"({year})" if year else ""
 
-    # Construct Header
+    # Construct Stylish Caption
     caption = (
         f"🎬 <b>{movie_name} {year_str}</b>\n"
         f"🔊 <b>Audio:</b> {audio}\n"
         f"━━━━━━━━━━━━━━━━━━━\n"
     )
 
-    # Add File Links (Loop through grouped files)
     for file in files_list:
         caption += f"📂 <a href='{file['link']}'><b>{file['quality']} - {file['size']}</b></a>\n"
 
@@ -103,12 +106,11 @@ async def send_batched_post(client, clean_name):
 @Client.on_message(filters.chat(CHANNELS) & (filters.document | filters.video | filters.audio))
 async def media_handler(client, message):
     try:
-        # 1. Get Media
         media = getattr(message, message.media.value)
         file_id, file_ref = unpack_new_file_id(media.file_id)
         file_name = media.file_name
         
-        # 2. Save to DB (Always)
+        # Save to DB
         try:
             media.file_type = message.media.value
             media.caption = message.caption
@@ -119,7 +121,6 @@ async def media_handler(client, message):
         if not UPDATES_CHANNEL:
             return
 
-        # 3. Prepare Data for Grouping
         clean_name = get_clean_name(file_name)
         file_data = {
             'name': clean_name,
@@ -130,15 +131,22 @@ async def media_handler(client, message):
             'link': f"https://t.me/{temp.U_NAME}?start=filep_{file_id}"
         }
 
-        # 4. Add to Batch & Start Timer
-        async with BATCH_LOCK:
-            if clean_name not in BATCH_DATA:
-                BATCH_DATA[clean_name] = []
-                # First file for this movie? Start the 5-sec timer
-                asyncio.create_task(send_batched_post(client, clean_name))
-            
-            BATCH_DATA[clean_name].append(file_data)
-            logger.info(f"➕ Added to Batch: {file_name}")
+        # --- SMART TIMER LOGIC ---
+        
+        # 1. Add file to list
+        if clean_name not in BATCH_DATA:
+            BATCH_DATA[clean_name] = []
+        BATCH_DATA[clean_name].append(file_data)
+
+        # 2. Cancel Old Timer (If exists)
+        if clean_name in BATCH_TASKS:
+            BATCH_TASKS[clean_name].cancel()
+
+        # 3. Start New Timer (Wait 10 secs from NOW)
+        task = asyncio.create_task(send_batched_post(client, clean_name))
+        BATCH_TASKS[clean_name] = task
+        
+        logger.info(f"⏳ Timer Reset for: {clean_name} (Waiting for more files...)")
 
     except Exception as e:
         logger.error(f"❌ Error: {e}")
