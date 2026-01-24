@@ -808,15 +808,10 @@ def get_clean_name(name):
     return clean.lower()
 
 @Client.on_message(filters.chat(CHANNELS) & (filters.document | filters.video | filters.audio))
-# 👇 DEBUG VERSION OF AUTO INDEX (Paste this at the bottom of commands.py) 👇
-
-@Client.on_message(filters.chat(CHANNELS) & (filters.document | filters.video | filters.audio))
 async def auto_index(client, message):
-    print(f"🎬 START: Processing File in {message.chat.title}")
-    
     try:
         # ==========================================
-        # PART 1: DB SAVE
+        # PART 1: SAVE TO DATABASE
         # ==========================================
         media = getattr(message, message.media.value)
         file_id, file_ref = unpack_new_file_id(media.file_id)
@@ -837,71 +832,75 @@ async def auto_index(client, message):
             },
             upsert=True
         )
-        print(f"✅ STEP 1 SUCCESS: Saved to DB -> {file_name}") 
+        print(f"✅ Saved to DB: {file_name}") 
 
         # ==========================================
-        # PART 2: CHANNEL UPDATE DEBUGGING
+        # PART 2: SMART CHANNEL UPDATE
         # ==========================================
         
-        # Check 1: UPDATES_CHANNEL ID Irukka?
-        print(f"🧐 DEBUG: Checking UPDATES_CHANNEL ID... Value: {UPDATES_CHANNEL}")
-        
+        # 1. Update Channel ID Check
         if not UPDATES_CHANNEL:
-            print("❌ STEP 2 FAILED: UPDATES_CHANNEL ID is Missing or 0 in Render Variables!")
             return 
 
-        # Check 2: Searching Database
+        # 2. Clean Name & Search DB
         clean_name = get_clean_name(file_name)
-        print(f"🔍 DEBUG: Searching DB for clean name: '{clean_name}'")
-        
         files, _, _ = await get_search_results(clean_name, max_results=10)
         
-        if not files:
-            print("❌ STEP 2 FAILED: No matching files found in Database (Maybe naming issue?)")
-            return
+        if files:
+            # 3. Create Buttons
+            btn = []
+            for file in files:
+                f_name = file.file_name
+                f_size = get_size(file.file_size)
+                link = f"https://t.me/{temp.U_NAME}?start=filep_{file.file_id}" 
+                btn.append([InlineKeyboardButton(f"📁 {f_name[:20]}... [{f_size}]", url=link)])
 
-        print(f"✅ STEP 2 SUCCESS: Found {len(files)} files. Preparing to Post...")
+            # 4. Create Caption
+            caption = (
+                f"<b>✨ NEW FILE ADDED ✨</b>\n\n"
+                f"<b>🎬 Title:</b> {clean_name.upper()}\n"
+                f"<b>📂 Total Files:</b> {len(files)}\n\n"
+                f"<i>👇 Select your quality below 👇</i>"
+            )
 
-        # Button Logic
-        btn = []
-        for file in files:
-            f_name = file.file_name
-            f_size = get_size(file.file_size)
-            link = f"https://t.me/{temp.U_NAME}?start=filep_{file.file_id}" 
-            btn.append([InlineKeyboardButton(f"📁 {f_name[:20]}... [{f_size}]", url=link)])
-
-        caption = (
-            f"<b>✨ NEW FILE ADDED ✨</b>\n\n"
-            f"<b>🎬 Title:</b> {clean_name.upper()}\n"
-            f"<b>📂 Total Files:</b> {len(files)}\n\n"
-            f"<i>👇 Select your quality below 👇</i>"
-        )
-
-        # Smart Update Logic
-        updated = False
-        try:
+            # 5. Smart Update (Edit Old or Send New)
+            updated = False
+            # Check last 20 messages for same movie
             async for msg in client.get_chat_history(UPDATES_CHANNEL, limit=20):
                 if msg.caption and clean_name.upper() in msg.caption:
-                    await msg.edit_caption(caption=caption, reply_markup=InlineKeyboardMarkup(btn))
-                    updated = True
-                    print(f"✅ STEP 3 SUCCESS: Existing Post Updated!")
-                    break
-        except Exception as e:
-            print(f"⚠️ DEBUG: Error checking chat history (Check Bot Admin Permissions): {e}")
+                    try:
+                        await msg.edit_caption(
+                            caption=caption,
+                            reply_markup=InlineKeyboardMarkup(btn)
+                        )
+                        updated = True
+                        print(f"🔄 Updated Existing Post for: {clean_name}")
+                        break
+                    except MessageNotModified:
+                        pass 
+                    except Exception as e:
+                        print(f"⚠️ Edit Error: {e}")
 
-        if not updated:
-            try:
+            # If no old message found, Send New
+            if not updated:
                 poster = random.choice(PICS) if PICS else None
                 if poster:
-                    await client.send_photo(chat_id=UPDATES_CHANNEL, photo=poster, caption=caption, reply_markup=InlineKeyboardMarkup(btn))
+                    await client.send_photo(
+                        chat_id=UPDATES_CHANNEL,
+                        photo=poster,
+                        caption=caption,
+                        reply_markup=InlineKeyboardMarkup(btn)
+                    )
                 else:
-                    await client.send_message(chat_id=UPDATES_CHANNEL, text=caption, reply_markup=InlineKeyboardMarkup(btn))
-                print(f"✅ STEP 3 SUCCESS: New Post Created!")
-            except Exception as e:
-                print(f"❌ STEP 3 FAILED: Sending Error! Is Bot Admin? Error: {e}")
+                    await client.send_message(
+                        chat_id=UPDATES_CHANNEL,
+                        text=caption,
+                        reply_markup=InlineKeyboardMarkup(btn)
+                    )
+                print(f"🆕 New Post Created for: {clean_name}")
 
     except Exception as e:
-        print(f"❌ CRITICAL ERROR: {e}")
+        print(f"❌ Auto Index Error: {e}")
 
 # 👆👆 CODE END 👆👆
 
