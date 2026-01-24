@@ -1,5 +1,7 @@
 # plugins/commands.py - FULL CLEAN CODE
+# Force Update v1.0
 import os
+...
 import logging
 import random
 import asyncio
@@ -16,6 +18,7 @@ from database.users_chats_db import db
 from info import CHANNELS, ADMINS, LOG_CHANNEL, PICS, BATCH_FILE_CAPTION, CUSTOM_FILE_CAPTION, PROTECT_CONTENT, FILE_CHANNELS, FILE_CHANNEL_SENDING_MODE, FILE_AUTO_DELETE_SECONDS, IS_VERIFY, UPDATES_CHANNEL
 from utils import get_settings, get_size, is_subscribed, save_group_settings, temp, create_invite_links, get_verify_link, check_verification, verify_user
 from database.connections_mdb import active_connection
+
 
 logger = logging.getLogger(__name__)
 
@@ -816,55 +819,41 @@ async def auto_index(client, message):
             },
             upsert=True
         )
-        logger.info(f"✅ Auto Index Step 1 OK: File Saved to DB -> {file_name}")
+        # Log Success
+        print(f"✅ Auto Index Step 1 OK: File Saved to DB -> {file_name}")
 
         # ==========================================
-        # PART 2: SMART CHANNEL UPDATE
+        # PART 2: SIMPLE TEXT POST (No Edit, Just Send)
         # ==========================================
         
         if not UPDATES_CHANNEL:
-            logger.error("❌ Auto Index Step 2 FAILED: UPDATES_CHANNEL ID is Missing!")
+            print("❌ UPDATES_CHANNEL ID Missing!")
             return 
 
         clean_name = get_clean_name(file_name)
-        files, _, _ = await get_search_results(clean_name, max_results=10)
-        
-        if files:
-            btn = []
-            for file in files:
-                f_name = file.file_name
-                f_size = get_size(file.file_size)
-                link = f"https://t.me/{temp.U_NAME}?start=filep_{file.file_id}" 
-                btn.append([InlineKeyboardButton(f"📁 {f_name[:20]}... [{f_size}]", url=link)])
+        file_size = get_size(media.file_size)
 
-            caption = (
-                f"<b>✨ NEW FILE ADDED ✨</b>\n\n"
-                f"<b>🎬 Title:</b> {clean_name.upper()}\n"
-                f"<b>📂 Total Files:</b> {len(files)}\n\n"
-                f"<i>👇 Select your quality below 👇</i>"
+        # Simple Caption (Text Only)
+        caption = (
+            f"<b>📂 New File Uploaded!</b>\n\n"
+            f"<b>🎬 Name:</b> {clean_name}\n"
+            f"<b>💾 Size:</b> {file_size}\n\n"
+            f"<i>Get this file from the bot! 👇</i>"
+        )
+
+        # Button
+        btn = [[InlineKeyboardButton("📥 Get File", url=f"https://t.me/{temp.U_NAME}?start=filep_{file_id}")]]
+
+        # Send Message
+        try:
+            await client.send_message(
+                chat_id=UPDATES_CHANNEL,
+                text=caption,
+                reply_markup=InlineKeyboardMarkup(btn)
             )
-
-            updated = False
-            try:
-                async for msg in client.get_chat_history(UPDATES_CHANNEL, limit=20):
-                    if msg.caption and clean_name.upper() in msg.caption:
-                        await msg.edit_caption(caption=caption, reply_markup=InlineKeyboardMarkup(btn))
-                        updated = True
-                        logger.info(f"✅ Auto Index Step 3: Updated Post for {clean_name}")
-                        break
-            except Exception as e:
-                logger.error(f"⚠️ Edit Error: {e}")
-
-            if not updated:
-                try:
-                    poster = random.choice(PICS) if PICS else None
-                    if poster:
-                        await client.send_photo(chat_id=UPDATES_CHANNEL, photo=poster, caption=caption, reply_markup=InlineKeyboardMarkup(btn))
-                    else:
-                        await client.send_message(chat_id=UPDATES_CHANNEL, text=caption, reply_markup=InlineKeyboardMarkup(btn))
-                    logger.info(f"✅ Auto Index Step 3: Created New Post for {clean_name}")
-                except Exception as e:
-                    logger.error(f"❌ Sending Failed: {e}")
+            print(f"✅ Auto Index Step 3: Post Sent to Channel!")
+        except Exception as e:
+            print(f"❌ Sending Failed: {e}")
 
     except Exception as e:
-        logger.error(f"❌ Critical Error: {e}")
+        print(f"❌ Error: {e}")
