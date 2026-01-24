@@ -25,12 +25,6 @@ from utils import get_size
 
 logger = logging.getLogger(__name__)
 
-# 👇 SPY CODE START 👇
-@Client.on_message(filters.channel)
-async def spy_channel_id(client, message):
-    print(f"👀 SPY: I found a message in '{message.chat.title}' | ID: {message.chat.id}")
-# 👆 SPY CODE END 👆
-
 BATCH_FILES = {}
 AUTO_DELETE_SECONDS = 15
 
@@ -942,24 +936,3 @@ async def premium_plans(client, message):
         print(f"Plan Command Error: {e}")
 
 # 👆👆 CODE END 👆👆
-
-# 👇 TEST COMMAND TO CHECK CHANNEL 👇
-@Client.on_message(filters.command("test_channel") & filters.user(ADMINS))
-async def test_update_channel(client, message):
-    try:
-        if not UPDATES_CHANNEL:
-            await message.reply("❌ UPDATES_CHANNEL ID set pannala (0 or None).")
-            return
-        
-        # Channel ID Verification
-        await message.reply(f"🔄 Trying to send message to Channel ID: `{UPDATES_CHANNEL}`")
-        
-        # Test Message Sending
-        await client.send_message(
-            chat_id=UPDATES_CHANNEL,
-            text="<b>✅ Test Message: Bot is Admin and Channel ID is Correct!</b>"
-        )
-        await message.reply("✅ Success! Channel-la message vanthuruchu paarunga.")
-        
-    except Exception as e:
-        await message.reply(f"❌ Failed! Error: {e}")
