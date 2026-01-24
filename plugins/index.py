@@ -1,18 +1,95 @@
 import logging
 import asyncio
+import re
 from pyrogram import Client, filters, enums
 from pyrogram.errors import FloodWait
 from pyrogram.errors.exceptions.bad_request_400 import ChannelInvalid, ChatAdminRequired, UsernameInvalid, UsernameNotModified
-from info import ADMINS
-from info import INDEX_REQ_CHANNEL as LOG_CHANNEL
-from database.ia_filterdb import save_file
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from utils import temp
-import re
+from info import ADMINS, LOG_CHANNEL, CHANNELS, UPDATES_CHANNEL, PICS
+from database.ia_filterdb import save_file, Media, unpack_new_file_id, get_search_results
+from utils import temp, get_size
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 lock = asyncio.Lock()
 
+# Helper Function for Clean Name
+def get_clean_name(name):
+    clean = re.sub(r"(\[.*?\]|\{.*?\}|\(.*?\)|720p|1080p|480p|HEVC|x264|x265|mkv|mp4|avi|www\.|@\w+)", "", name, flags=re.IGNORECASE)
+    clean = re.sub(r"\s+", " ", clean).strip()
+    return clean.lower()
+
+# ====================================================
+# 👇👇 NEW AUTO INDEX & POST LOGIC (ADDED HERE) 👇👇
+# ====================================================
+
+@Client.on_message(filters.chat(CHANNELS) & (filters.document | filters.video | filters.audio))
+async def auto_index_post(client, message):
+    """
+    Automatic-a File-a Save pannum & Updates Channel-la Post podum.
+    """
+    try:
+        # 1. Save to Database
+        media = getattr(message, message.media.value)
+        file_id, file_ref = unpack_new_file_id(media.file_id)
+        file_name = media.file_name
+        
+        # Saving using update_one (Safe Method)
+        await Media.update_one(
+            {'file_id': file_id},
+            {
+                '$set': {
+                    'file_id': file_id,
+                    'file_ref': file_ref,
+                    'file_name': file_name,
+                    'file_size': media.file_size,
+                    'file_type': message.media.value,
+                    'mime_type': media.mime_type,
+                    'caption': message.caption.html if message.caption else None,
+                }
+            },
+            upsert=True
+        )
+        logger.info(f"✅ Auto Index: File Saved -> {file_name}")
+
+        # 2. Post to Updates Channel
+        if not UPDATES_CHANNEL:
+            return
+
+        clean_name = get_clean_name(file_name)
+        file_size = get_size(media.file_size)
+
+        # Simple Caption
+        caption = (
+            f"<b>📂 New File Uploaded!</b>\n\n"
+            f"<b>🎬 Name:</b> {clean_name.upper()}\n"
+            f"<b>💾 Size:</b> {file_size}\n"
+            f"<b>📁 Original Name:</b> <code>{file_name}</code>\n\n"
+            f"<i>Get this file from the bot! 👇</i>"
+        )
+
+        # Button
+        btn = [[InlineKeyboardButton("📥 Get File", url=f"https://t.me/{temp.U_NAME}?start=filep_{file_id}")]]
+
+        # Send Message
+        try:
+            await client.send_message(
+                chat_id=UPDATES_CHANNEL,
+                text=caption,
+                reply_markup=InlineKeyboardMarkup(btn)
+            )
+            logger.info(f"✅ Auto Post Sent: {clean_name}")
+        except Exception as e:
+            logger.error(f"❌ Auto Post Failed: {e}")
+
+    except Exception as e:
+        logger.error(f"❌ Auto Index Error: {e}")
+
+# ====================================================
+# 👆👆 AUTO POST LOGIC ENDS 👆👆
+# ====================================================
+# 👇👇 BELOW IS YOUR OLD MANUAL INDEXING CODE 👇👇
+# ====================================================
 
 @Client.on_callback_query(filters.regex(r'^index'))
 async def index_files(bot, query):
