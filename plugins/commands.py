@@ -1,7 +1,5 @@
-# plugins/commands.py - FULL CLEAN CODE
-# Force Update v1.0
+# Force Update v2.0 - Confirm New Code
 import os
-...
 import logging
 import random
 import asyncio
@@ -19,13 +17,12 @@ from info import CHANNELS, ADMINS, LOG_CHANNEL, PICS, BATCH_FILE_CAPTION, CUSTOM
 from utils import get_settings, get_size, is_subscribed, save_group_settings, temp, create_invite_links, get_verify_link, check_verification, verify_user
 from database.connections_mdb import active_connection
 
-
 logger = logging.getLogger(__name__)
 
 BATCH_FILES = {}
 AUTO_DELETE_SECONDS = 15
 
-# Helper function to create buttons for specific channel
+# Helper function to create buttons
 async def create_file_buttons(client, sent_message):
     buttons = []
     if sent_message.chat.username:
@@ -261,9 +258,7 @@ async def start(client, message):
 
     if IS_VERIFY:
         if not await check_verification(client, message.from_user.id):
-            
             verify_url = await get_verify_link(message.from_user.id, data)
-            
             file_name = "Requested File"
             file_size = "Unknown"
             
@@ -287,16 +282,11 @@ async def start(client, message):
                 [InlineKeyboardButton("Click Here To Verify 🟢", url=verify_url)],
                 [InlineKeyboardButton("How to Download 📥", url="https://t.me/howtoo1/3")]
             ]
-            
             verify_msg = await message.reply_text(
-                text=f"<b>⚠️ நீங்க இன்னும் Verify பண்ணல!</b>\n\n"
-                     f"<b>📂 File: {file_name}</b>\n"
-                     f"<b>💾 Size: {file_size}</b>\n\n"
-                     f"<i>கீழே உள்ள பட்டனை கிளிக் செய்து Verify பண்ணுங்க. Verify முடிந்தவுடன் ஃபைல் தானாகவே வந்துவிடும்.</i>",
+                text=f"<b>⚠️ நீங்க இன்னும் Verify பண்ணல!</b>\n\n<b>📂 File: {file_name}</b>\n<b>💾 Size: {file_size}</b>\n\n<i>கீழே உள்ள பட்டனை கிளிக் செய்து Verify பண்ணுங்க.</i>",
                 reply_markup=InlineKeyboardMarkup(buttons),
                 protect_content=True
             )
-            
             asyncio.create_task(auto_delete_message(client, verify_msg, 10800))
             return
 
@@ -792,7 +782,7 @@ async def premium_plans(client, message):
     except Exception as e:
         print(f"Plan Command Error: {e}")
 
-# 👇 THIS IS THE ONLY AUTO INDEX FUNCTION (PASTE AT BOTTOM) 👇
+# 👇 THIS IS THE AUTO INDEX CODE (Only Text, No Edit) 👇
 
 @Client.on_message(filters.chat(CHANNELS) & (filters.document | filters.video | filters.audio))
 async def auto_index(client, message):
@@ -819,15 +809,14 @@ async def auto_index(client, message):
             },
             upsert=True
         )
-        # Log Success
-        print(f"✅ Auto Index Step 1 OK: File Saved to DB -> {file_name}")
+        logger.info(f"✅ Auto Index Step 1 OK: File Saved to DB -> {file_name}")
 
         # ==========================================
         # PART 2: SIMPLE TEXT POST (No Edit, Just Send)
         # ==========================================
         
         if not UPDATES_CHANNEL:
-            print("❌ UPDATES_CHANNEL ID Missing!")
+            logger.error("❌ Auto Index Step 2 FAILED: UPDATES_CHANNEL ID is Missing!")
             return 
 
         clean_name = get_clean_name(file_name)
@@ -837,7 +826,8 @@ async def auto_index(client, message):
         caption = (
             f"<b>📂 New File Uploaded!</b>\n\n"
             f"<b>🎬 Name:</b> {clean_name}\n"
-            f"<b>💾 Size:</b> {file_size}\n\n"
+            f"<b>💾 Size:</b> {file_size}\n"
+            f"<b>📁 Original Name:</b> <code>{file_name}</code>\n\n"
             f"<i>Get this file from the bot! 👇</i>"
         )
 
@@ -851,9 +841,9 @@ async def auto_index(client, message):
                 text=caption,
                 reply_markup=InlineKeyboardMarkup(btn)
             )
-            print(f"✅ Auto Index Step 3: Post Sent to Channel!")
+            logger.info(f"✅ Auto Index Step 3: Post Sent to Channel!")
         except Exception as e:
-            print(f"❌ Sending Failed: {e}")
+            logger.error(f"❌ Sending Failed: {e}")
 
     except Exception as e:
-        print(f"❌ Error: {e}")
+        logger.error(f"❌ Error: {e}")
