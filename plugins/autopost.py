@@ -9,11 +9,44 @@ from utils import temp, get_size
 
 logger = logging.getLogger(__name__)
 
-# --- BATCH STORAGE & TASKS ---
+# --- BATCH STORAGE ---
 BATCH_DATA = {}
 BATCH_TASKS = {} 
 
-# --- Helper Functions ---
+# --- 1. SMART NAME CLEANER (Google Style) ---
+def get_clean_name(name):
+    # 1. Lowercase
+    clean = name.lower()
+    
+    # 2. Remove Specific Junk (Unga Channel Name & Ext)
+    clean = clean.replace("goku stark", "")
+    clean = clean.replace("@goku_stark", "")
+    clean = clean.replace("trollmaa", "")
+    clean = re.sub(r'\.(mkv|mp4|avi|flv|webm)$', '', clean) # Remove .mkv
+    
+    # 3. Remove Year (to group same movies)
+    clean = re.sub(r'\b(19|20)\d{2}\b', '', clean)
+    
+    # 4. Remove Tags inside [], ()
+    clean = re.sub(r'\[.*?\]', '', clean)
+    clean = re.sub(r'\(.*?\)', '', clean)
+    
+    # 5. Remove Common Quality/Lang Tags (Aggressive Cleaning)
+    keywords = [
+        "tamil", "telugu", "hindi", "malayalam", "kannada", "english", "eng", "tam", "tel", "hin",
+        "hq", "hdrip", "bluray", "web-dl", "web", "hd", "cam", "predvd", "dvdscr", "rip",
+        "1080p", "720p", "480p", "2160p", "4k", "5.1", "aac", "x264", "x265", "hevc", "esub", "sub",
+        "remastered", "bd", "dual", "multi", "audio"
+    ]
+    for word in keywords:
+        clean = re.sub(r'\b' + re.escape(word) + r'\b', '', clean)
+    
+    # 6. Remove Special Characters & Extra Spaces
+    clean = re.sub(r'[-_./@|]', ' ', clean)
+    clean = re.sub(r'\s+', ' ', clean).strip()
+    
+    # 7. Title Case (First Letter Capital)
+    return clean.title()
 
 def get_year(filename):
     match = re.search(r'\b(19|20)\d{2}\b', filename)
@@ -31,50 +64,19 @@ def get_quality(filename):
 def get_audio(filename):
     filename = filename.lower()
     audio = []
-    # Order matters: check distinct languages
     if "tamil" in filename: audio.append("Tamil")
     if "telugu" in filename: audio.append("Telugu")
     if "hindi" in filename: audio.append("Hindi")
     if "malayalam" in filename: audio.append("Malayalam")
-    if "kan" in filename: audio.append("Kannada")
     if "eng" in filename: audio.append("English")
+    if "kan" in filename: audio.append("Kannada")
     if "multi" in filename or "dual" in filename: audio.append("Multi Audio")
-    
     return " - ".join(audio) if audio else "Original Audio"
 
-def get_clean_name(name):
-    # 1. Lowercase conversion
-    clean = name.lower()
-    
-    # 2. Remove Year (e.g., 2024)
-    clean = re.sub(r'\b(19|20)\d{2}\b', '', clean)
-    
-    # 3. Remove content inside brackets like [Tamil] or (2024) to group correctly
-    clean = re.sub(r'\[.*?\]', '', clean)
-    clean = re.sub(r'\(.*?\)', '', clean)
-    
-    # 4. Remove Common Keywords (Languages, Quality, etc.) to get RAW Name
-    keywords = [
-        "tamil", "telugu", "hindi", "malayalam", "kannada", "english", "eng", "tam", "tel", "hin",
-        "hq", "hdrip", "bluray", "web-dl", "web", "hd", "cam", "predvd", "dvdscr", "rip",
-        "1080p", "720p", "480p", "2160p", "4k", "5.1", "aac", "x264", "x265", "hevc", "esub", "sub"
-    ]
-    for word in keywords:
-        clean = clean.replace(word, "")
-    
-    # 5. Remove Special Characters (- _ . @)
-    clean = re.sub(r'[-_./@]', ' ', clean)
-    
-    # 6. Remove Extra Spaces
-    clean = re.sub(r"\s+", " ", clean).strip()
-    
-    # 7. Title Case for looks (e.g., "leo movie" -> "Leo Movie")
-    return clean.title()
-
-# --- Sender Function ---
+# --- 2. BATCH SENDER (Duplicate Remover) ---
 
 async def send_batched_post(client, clean_name):
-    # Wait for 10 Seconds (Group all files)
+    # Wait 10s for all files to arrive
     try:
         await asyncio.sleep(10)
     except asyncio.CancelledError:
@@ -84,25 +86,33 @@ async def send_batched_post(client, clean_name):
         return
 
     # Pop Data
-    files_list = BATCH_DATA.pop(clean_name)
+    raw_files_list = BATCH_DATA.pop(clean_name)
     if clean_name in BATCH_TASKS:
         del BATCH_TASKS[clean_name]
 
-    # Sort files (High Quality first)
-    files_list.sort(key=lambda x: x['quality'], reverse=True)
-
-    if not files_list:
+    # --- DUPLICATE REMOVAL LOGIC ---
+    # Ore size iruntha delete pannidum
+    unique_files = []
+    seen_sizes = set()
+    
+    for f in raw_files_list:
+        if f['size'] not in seen_sizes:
+            unique_files.append(f)
+            seen_sizes.add(f['size'])
+            
+    if not unique_files:
         return
 
-    # --- STYLE SECTION (Red 1, 2, 3) ---
-    
-    first_file = files_list[0]
-    # Use the clean name for the title
-    movie_name = clean_name 
+    # Sort: Highest Quality First
+    unique_files.sort(key=lambda x: x['quality'], reverse=True)
+
+    # Extract Details
+    first_file = unique_files[0]
+    movie_name = clean_name  # Use Clean Name (No junk)
     year = first_file['year']
     audio = first_file['audio']
 
-    # 1. Movie Name | 2. Year | 3. Audio
+    # --- FINAL STYLE ---
     caption = (
         f"🎥 <b>{movie_name}</b>\n"
         f"📅 <b>Year:</b> {year}\n"
@@ -110,15 +120,13 @@ async def send_batched_post(client, clean_name):
         f"──────────────────\n"
     )
 
-    # Files List (Clean Look)
-    for file in files_list:
-        # Display: 📂 720p HD - 1.4GB (Clickable)
-        caption += f"📂 <a href='{file['link']}'><b>{file['quality']} - {file['size']}</b></a>\n"
+    for file in unique_files:
+        # Link Format: 📂 720p HD [1.4GB]
+        caption += f"📂 <a href='{file['link']}'><b>{file['quality']} [{file['size']}]</b></a>\n"
 
     caption += "──────────────────\n"
     caption += "<i>(Click the file size to download)</i>"
 
-    # Channel Button
     channel_btn = [[InlineKeyboardButton("✨ ᴊᴏɪɴ ᴍᴏᴠɪᴇ ᴜᴘᴅᴀᴛᴇs ✨", url="https://t.me/tamiltechgkofficial")]]
 
     try:
@@ -127,11 +135,11 @@ async def send_batched_post(client, clean_name):
             text=caption,
             reply_markup=InlineKeyboardMarkup(channel_btn)
         )
-        logger.info(f"✅ Group Post Sent: {movie_name}")
+        logger.info(f"✅ Group Post Sent: {movie_name} ({len(unique_files)} Files)")
     except Exception as e:
         logger.error(f"❌ Post Failed: {e}")
 
-# --- Main Listener ---
+# --- 3. MAIN LISTENER ---
 
 @Client.on_message(filters.chat(CHANNELS) & (filters.document | filters.video | filters.audio))
 async def media_handler(client, message):
@@ -151,7 +159,7 @@ async def media_handler(client, message):
         if not UPDATES_CHANNEL:
             return
 
-        # VERY IMPORTANT: Get the "Grouping Name"
+        # Clean Name for Grouping
         clean_name = get_clean_name(file_name)
         
         file_data = {
@@ -163,20 +171,19 @@ async def media_handler(client, message):
             'link': f"https://t.me/{temp.U_NAME}?start=filep_{file_id}"
         }
 
-        # Batch Logic (Smart Timer)
+        # Add to Batch
         if clean_name not in BATCH_DATA:
             BATCH_DATA[clean_name] = []
         BATCH_DATA[clean_name].append(file_data)
 
-        # Cancel Old Timer (Reset Clock)
+        # Reset Timer
         if clean_name in BATCH_TASKS:
             BATCH_TASKS[clean_name].cancel()
 
-        # Start New Timer
         task = asyncio.create_task(send_batched_post(client, clean_name))
         BATCH_TASKS[clean_name] = task
         
-        logger.info(f"⏳ Grouping file under: {clean_name}")
+        logger.info(f"⏳ Grouping file: {clean_name}")
 
     except Exception as e:
         logger.error(f"❌ Error: {e}")
