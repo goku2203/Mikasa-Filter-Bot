@@ -1,14 +1,20 @@
 import re
 import asyncio
+import os
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from info import ADMINS, VERIFY
-# 👇 Mukkiyamaana Imports (Database & Utils)
+from info import ADMINS
+# 👇 UPDATE: 'VERIFY' remove panniyachu, direct-a define panrom
 from database.ia_filterdb import get_file_details, unpack_new_file_id
 from utils import get_verify_status, get_shortlink, get_size, temp
 
 # --- SETTINGS ---
-# 3 Hours = 10800 Seconds
+
+# 1. Verify Setting (Default: True)
+# 'info.py' la illanalum paravalla, inga direct-a edukum.
+VERIFY = os.environ.get("VERIFY", "True").lower() == "true"
+
+# 2. Auto Delete Time (3 Hours = 10800 Seconds)
 AUTO_DELETE_TIME = 10800 
 
 # --- AUTO DELETE HELPER ---
@@ -43,14 +49,14 @@ async def start_generator(client, message):
             file_info = file_details_list[0]
 
             # -------------------------------------------------------------
-            # 👇 CLICK TO VERIFY LOGIC (Add Panniyachu) 👇
+            # 👇 CLICK TO VERIFY LOGIC 👇
             # -------------------------------------------------------------
-            if VERIFY: # Info.py la VERIFY = True nu irukkanum
+            if VERIFY:
                 # User Verify panni irukkara nu check panrom
                 is_verified = await get_verify_status(message.from_user.id)
                 
                 if not is_verified:
-                    # Verify pannalana, Shortlink create panrom
+                    # Shortlink create panrom
                     verify_link = await get_shortlink(f"https://t.me/{temp.U_NAME}?start={data}")
                     
                     btn = [
@@ -75,8 +81,6 @@ async def start_generator(client, message):
             # 👆 VERIFY LOGIC END 👆
             # -------------------------------------------------------------
 
-            # User Verified-a iruntha, inga varum:
-            
             # Send the File
             msg = await client.send_cached_media(
                 chat_id=message.from_user.id,
