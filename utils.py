@@ -58,6 +58,11 @@ def get_size(size):
         n += 1
     return str(round(size, 2)) + " " + Dic_powerN[n] + 'B'
 
+# 👇 ADDED humanbytes FUNCTION 👇
+def humanbytes(size):
+    """Alias for get_size (Used by plugins/etc.py)"""
+    return get_size(size)
+
 def get_file_id(msg: Message):
     if msg.media:
         for message_type in ("photo", "animation", "audio", "document", "video", "video_note", "voice", "sticker"):
@@ -114,7 +119,6 @@ async def get_shortlink(link):
         logger.error(f"Shortener Error: {e}")
         return link
 
-# 👇 ADDED THESE 2 FUNCTIONS TO FIX ERROR 👇
 async def get_short(link):
     return await get_shortlink(link)
 
