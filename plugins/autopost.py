@@ -24,32 +24,33 @@ def get_year(filename):
     m = re.search(r'\b(19|20)\d{2}\b', filename)
     return m.group(0) if m else "N/A"
 
-
 def clean_base_name(filename):
     name = filename.lower()
 
-    # remove extension
+    # 1. remove extension
     name = re.sub(r'\.(mkv|mp4|avi|flv|webm)$', '', name)
 
-    # remove year
+    # 2. remove year
     name = re.sub(r'\b(19|20)\d{2}\b', '', name)
 
-    # remove size
-    name = re.sub(r'\b\d+(\.\d+)?\s?(gb|mb)\b', '', name)
+    # 3. remove size & bitrate
+    name = re.sub(r'\b\d+(\.\d+)?\s?(gb|mb|kb)\b', '', name)
 
-    # junk patterns
+    # 4. remove quality / format / subtitle / audio junk
     junk_patterns = [
-        r'\b(2160p|4k|1080p|720p|480p|hdrip|bluray|web[- ]?dl|x264|x265|hevc)\b',
-        r'\b(dd\+?5\.?1?|aac|ac3|dts|eac3)\b',
-        r'\b(tamil|telugu|hindi|malayalam|english|multi|dual)\b',
+        r'\b(2160p|4k|1080p|720p|480p|hdrip|bluray|web[- ]?dl|hq)\b',
+        r'\b(esub|sub|subs)\b',
+        r'\b(ddp?5\.?1?|aac|ac3|dts|eac3)\b',
+        r'\b(x264|x265|hevc|avc)\b',
         r'\b(uncut|extended|proper|remastered)\b',
+        r'\b(tamil|telugu|hindi|malayalam|english|multi|dual)\b',
         r'\b(mkv|mp4)\b'
     ]
 
     for p in junk_patterns:
         name = re.sub(p, '', name)
 
-    # channel junk
+    # 5. remove channel / uploader junk
     channels = [
         "goku stark", "gokustark", "@gokustark",
         "trollmaa", "backup tamil movies"
@@ -57,11 +58,14 @@ def clean_base_name(filename):
     for ch in channels:
         name = name.replace(ch, '')
 
-    # symbols
+    # 6. remove symbols
     name = re.sub(r'[^a-z0-9 ]', ' ', name)
+
+    # 7. normalize spaces
     name = re.sub(r'\s+', ' ', name).strip()
 
     return name.title()
+
 
 
 def get_quality_category(filename):
