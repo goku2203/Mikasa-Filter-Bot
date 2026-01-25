@@ -48,8 +48,7 @@ class temp(object):
 
 def get_size(size):
     """Get size in readable format"""
-    if not size:
-        return ""
+    if not size: return ""
     power = 2**10
     n = 0
     Dic_powerN = {0: ' ', 1: 'Ki', 2: 'Mi', 3: 'Gi', 4: 'Ti'}
@@ -91,10 +90,8 @@ def extract_user(message: Message) -> Union[int, str]:
     return (user_id, user_first_name)
 
 def list_to_str(k):
-    if not k:
-        return "N/A"
-    elif len(k) == 1:
-        return str(k[0])
+    if not k: return "N/A"
+    elif len(k) == 1: return str(k[0])
     elif MAX_LIST_ELM:
         k = k[:int(MAX_LIST_ELM)]
         return ' '.join(f'{elem}, ' for elem in k)
@@ -104,13 +101,10 @@ def list_to_str(k):
 # --- VERIFICATION & SHORTLINK LOGIC ---
 
 async def get_shortlink(link):
-    """Generate Shortlink using API (Used by Genlink)"""
-    if not SHORTLINK_URL or not SHORTLINK_API:
-        return link
-        
+    """Generate Shortlink using API"""
+    if not SHORTLINK_URL or not SHORTLINK_API: return link
     shortener_url = f"https://{SHORTLINK_URL}/api"
     params = {'api': SHORTLINK_API, 'url': link}
-    
     try:
         async with aiohttp.ClientSession() as session:
             async with session.get(shortener_url, params=params, raise_for_status=True) as response:
@@ -120,13 +114,15 @@ async def get_shortlink(link):
         logger.error(f"Shortener Error: {e}")
         return link
 
-# 👇 THIS WAS MISSING! ADDED BACK 👇
+# 👇 ADDED THESE 2 FUNCTIONS TO FIX ERROR 👇
 async def get_short(link):
-    """Alias for get_shortlink (Used by Extra/short.py)"""
+    return await get_shortlink(link)
+
+async def get_verify_link(link):
+    """Alias for commands.py compatibility"""
     return await get_shortlink(link)
 
 async def verify_user(user_id):
-    """Set User as Verified in Database"""
     expiry = datetime.now() + timedelta(seconds=86400) 
     await db.col.update_one(
         {'id': user_id}, 
@@ -135,35 +131,23 @@ async def verify_user(user_id):
     )
 
 async def check_verification(user_id):
-    """Check if User is Verified"""
-    if not IS_VERIFY: 
-        return True
-    
+    if not IS_VERIFY: return True
     user = await db.col.find_one({'id': user_id})
-    if not user: 
-        return False
-    
+    if not user: return False
     verify_status = user.get('verify_status', {})
     expiry = verify_status.get('verify_until')
-    
-    if expiry and datetime.now() < expiry:
-        return True 
-    
+    if expiry and datetime.now() < expiry: return True 
     return False 
 
 async def get_verify_status(user_id):
-    """Wrapper function used by Genlink"""
-    if user_id in AUTH_USERS:
-        return True
+    if user_id in AUTH_USERS: return True
     return await check_verification(user_id)
 
 # --- SUBSCRIPTION CHECKS ---
 
 async def is_subscribed(user_id: int, client) -> bool:
     auth_channels = await db.get_auth_channels()
-    if not auth_channels:
-        return True
-    
+    if not auth_channels: return True
     joined_all = True
     for channel in auth_channels:
         try:
@@ -174,15 +158,10 @@ async def is_subscribed(user_id: int, client) -> bool:
         except Exception:
             joined_all = False
             break
-            
-    if joined_all:
-        return True
-        
+    if joined_all: return True
     if REQUEST_FSUB_MODE:
         requested_channels = JOIN_REQUEST_USERS.get(user_id, set())
-        if set(auth_channels).issubset(requested_channels):
-            return True
-            
+        if set(auth_channels).issubset(requested_channels): return True
     return False
 
 async def create_invite_links(client) -> dict:
@@ -217,39 +196,26 @@ async def get_poster(query, bulk=False, id=False, file=None):
         else:
             year = None
         movieid = imdb.search_movie(title.lower(), results=10)
-        if not movieid:
-            return None
+        if not movieid: return None
         if year:
             filtered=list(filter(lambda k: str(k.get('year')) == str(year), movieid))
-            if not filtered:
-                filtered = movieid
-        else:
-            filtered = movieid
+            if not filtered: filtered = movieid
+        else: filtered = movieid
         movieid=list(filter(lambda k: k.get('kind') in ['movie', 'tv series'], filtered))
-        if not movieid:
-            movieid = filtered
-        if bulk:
-            return movieid
+        if not movieid: movieid = filtered
+        if bulk: return movieid
         movieid = movieid[0].movieID
-    else:
-        movieid = query
+    else: movieid = query
     movie = imdb.get_movie(movieid)
-    if movie.get("original air date"):
-        date = movie["original air date"]
-    elif movie.get("year"):
-        date = movie.get("year")
-    else:
-        date = "N/A"
+    if movie.get("original air date"): date = movie["original air date"]
+    elif movie.get("year"): date = movie.get("year")
+    else: date = "N/A"
     plot = ""
     if not LONG_IMDB_DESCRIPTION:
         plot = movie.get('plot')
-        if plot and len(plot) > 0:
-            plot = plot[0]
-    else:
-        plot = movie.get('plot outline')
-    if plot and len(plot) > 800:
-        plot = plot[0:800] + "..."
-
+        if plot and len(plot) > 0: plot = plot[0]
+    else: plot = movie.get('plot outline')
+    if plot and len(plot) > 800: plot = plot[0:800] + "..."
     return {
         'title': movie.get('title'),
         'votes': movie.get('votes'),
