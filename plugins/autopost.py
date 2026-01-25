@@ -1,7 +1,6 @@
 import logging
 import asyncio
 import re
-import os
 from pyrogram import Client, filters
 from info import CHANNELS, UPDATES_CHANNEL
 from database.ia_filterdb import save_file, unpack_new_file_id
@@ -9,32 +8,18 @@ from utils import temp, get_size
 
 logger = logging.getLogger(__name__)
 
-# --- SETTINGS ---
-# 3 Hours = 3 * 60 * 60 = 10800 Seconds
-AUTO_DELETE_TIME = 10800 
-
 # --- BATCH STORAGE ---
 BATCH_DATA = {}
 BATCH_TASKS = {} 
 
-# --- 1. AUTO DELETE FUNCTION ---
-async def delete_post_after_delay(client, chat_id, message_id):
-    try:
-        # Wait for 3 Hours
-        await asyncio.sleep(AUTO_DELETE_TIME)
-        # Delete Message
-        await client.delete_messages(chat_id, message_id)
-        logger.info(f"🗑️ Auto Deleted Post: {message_id} in {chat_id}")
-    except Exception as e:
-        logger.error(f"❌ Failed to Delete Post: {e}")
-
-# --- 2. SMART INFO EXTRACTORS ---
+# --- 1. SMART INFO EXTRACTORS ---
 
 def get_audio(filename):
     if not filename: return "Original Audio"
     filename = filename.lower()
     audio = []
     
+    # Smart Detection
     if re.search(r'\b(tam|tamil)\b', filename): audio.append("Tamil")
     if re.search(r'\b(tel|telugu)\b', filename): audio.append("Telugu")
     if re.search(r'\b(hin|hindi)\b', filename): audio.append("Hindi")
@@ -51,9 +36,13 @@ def get_clean_name(name):
     if not name: return ""
     clean = name.lower()
     
+    # 1. Remove File Extension
     clean = re.sub(r'\.(mkv|mp4|avi|flv|webm)$', '', clean)
+    
+    # 2. Remove Year
     clean = re.sub(r'\b(19|20)\d{2}\b', '', clean)
     
+    # 3. Remove Channel Names & Junk
     junk_list = [
         "@goku_stark", "goku stark", "trollmaa", "@skmain1", "skmain1", 
         "backup - tamil movies", "gokustark", "@gokustark", "www.", ".com"
@@ -61,10 +50,14 @@ def get_clean_name(name):
     for junk in junk_list:
         clean = clean.replace(junk, "")
 
+    # 4. Remove Brackets
     clean = re.sub(r'[\[\(\{].*?[\]\)\}]', '', clean)
+
+    # 5. Remove Sizes
     clean = re.sub(r'\b\d{3,4}mb\b', '', clean)
     clean = re.sub(r'\b\d+(\.\d+)?gb\b', '', clean)
 
+    # 6. Remove Quality & Format Junk
     junk_words = [
         "2160p", "4k", "1080p", "720p", "480p", "360p", 
         "hdrip", "hq", "hd", "bd", "bluray", "blu-ray", "br-rip", "brrip", "web-dl", "web",
@@ -72,15 +65,19 @@ def get_clean_name(name):
         "uncut", "extended", "dual", "multi", "audio", "esubs", "esub", "x264", "x265", "hevc",
         "dd5.1", "dd+", "aac", "ac3"
     ]
+    
     for word in junk_words:
         clean = re.sub(r'\b' + re.escape(word) + r'\b', '', clean)
 
+    # 7. Remove Languages from Title
     langs = ["tamil", "telugu", "hindi", "english", "tam", "tel", "hin", "eng", "malayalam", "kannada"]
     for lang in langs:
         clean = re.sub(r'\b' + re.escape(lang) + r'\b', '', clean)
 
+    # 8. Final Polish
     clean = re.sub(r'[-_./@|:+]', ' ', clean)
     clean = re.sub(r'\s+', ' ', clean).strip()
+    
     return clean.title()
 
 def get_year(filename):
@@ -104,7 +101,7 @@ def get_quality_short(filename):
     if "720p" in filename: return "HD"
     return "HD-Rip"
 
-# --- 3. BATCH SENDER ---
+# --- 2. BATCH SENDER ---
 
 async def send_batched_post(client, clean_name):
     try:
@@ -115,10 +112,12 @@ async def send_batched_post(client, clean_name):
     if clean_name not in BATCH_DATA:
         return
 
+    # Pop Data
     raw_files_list = BATCH_DATA.pop(clean_name)
     if clean_name in BATCH_TASKS:
         del BATCH_TASKS[clean_name]
 
+    # Duplicate Removal
     unique_files = []
     seen_sizes = set()
     for f in raw_files_list:
@@ -129,8 +128,10 @@ async def send_batched_post(client, clean_name):
     if not unique_files:
         return
 
+    # --- MERGE AUDIO INFO ---
     all_audios = set()
     first_file = unique_files[0]
+    
     for f in unique_files:
         langs = f['audio'].split(' - ')
         for l in langs:
@@ -144,7 +145,9 @@ async def send_batched_post(client, clean_name):
     else:
         final_audio_str = first_file['audio']
 
+    # --- CATEGORIZE ---
     categorized = { "4K": [], "FULL HD": [], "Only HD": [], "HD-Rip": [] }
+    
     for file in unique_files:
         cat = file['category']
         if cat in categorized:
@@ -152,6 +155,8 @@ async def send_batched_post(client, clean_name):
         else:
             categorized["HD-Rip"].append(file)
 
+    # --- BUILD CAPTION ---
+    
     caption = (
         f"🎬 <b>{clean_name}</b>\n"
         f"🗓️ <b>Year:</b> {first_file['year']}\n"
@@ -160,6 +165,7 @@ async def send_batched_post(client, clean_name):
     )
 
     order = ["HD-Rip", "Only HD", "FULL HD", "4K"]
+    
     has_files = False
     for category in order:
         files = categorized[category]
@@ -173,25 +179,23 @@ async def send_batched_post(client, clean_name):
     if not has_files:
         return
 
+    # --- FOOTER CHANGES (TEXT WITH LINK) ---
     caption += "━━━━━━━━━━━━━━━━━━━\n"
     caption += "<i>(Click the file size to download)</i>\n\n"
+    
+    # Inga Unga Channel Link Irukkum
     caption += "<b><a href='https://t.me/+buF9u_rT7o5mMmRl'>by Own Channel</a></b>"
 
     try:
-        # Send Message
-        sent_msg = await client.send_message(
+        await client.send_message(
             chat_id=UPDATES_CHANNEL,
             text=caption
         )
         logger.info(f"✅ Post Sent: {clean_name}")
-        
-        # --- SCHEDULE AUTO DELETE ---
-        asyncio.create_task(delete_post_after_delay(client, UPDATES_CHANNEL, sent_msg.id))
-        
     except Exception as e:
         logger.error(f"❌ Post Failed: {e}")
 
-# --- 4. MAIN LISTENER ---
+# --- 3. MAIN LISTENER ---
 
 @Client.on_message(filters.chat(CHANNELS) & (filters.document | filters.video | filters.audio))
 async def media_handler(client, message):
@@ -199,6 +203,7 @@ async def media_handler(client, message):
         media = getattr(message, message.media.value)
         file_id, file_ref = unpack_new_file_id(media.file_id)
         
+        # USE CAPTION FIRST
         raw_name = message.caption if message.caption else media.file_name
         
         try:
@@ -233,7 +238,7 @@ async def media_handler(client, message):
         task = asyncio.create_task(send_batched_post(client, clean_name))
         BATCH_TASKS[clean_name] = task
         
-        logger.info(f"⏳ Grouping: {clean_name}")
+        logger.info(f"⏳ Grouping: {clean_name} (30s Wait)")
 
     except Exception as e:
         logger.error(f"❌ Error: {e}")
