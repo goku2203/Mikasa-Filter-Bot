@@ -235,24 +235,32 @@ async def start(client, message):
         return
 
     if len(message.command) == 2 and message.command[1].startswith('verify_'):
-        try:
-            link_parts = message.command[1].split("_", 2)
-            check_id = link_parts[1]
+    try:
+        link_parts = message.command[1].split("_", 2)
+        check_id = link_parts[1]
+        
+        if str(message.from_user.id) == check_id:
+            await verify_user(message.from_user.id)
             
-            if str(message.from_user.id) == check_id:
-                await verify_user(message.from_user.id)
-                await message.reply_text("<b>✅ Verification Successful!</b>\n\n<i>File Uploading... Please wait...</i>", protect_content=True)
-                
-                if len(link_parts) > 2:
-                    message.command[1] = link_parts[2]
-                else:
-                    return 
+            # 1. Message-a variable-la store pannunga
+            v_msg = await message.reply_text(
+                "<b>✅ Verification Successful!</b>\n\n<i>File Uploading... Please wait...</i>", 
+                protect_content=True
+            )
+            
+            # 2. Background task moolama 10 sec-la delete panna sollunga
+            asyncio.create_task(auto_delete_helper(v_msg, 10))
+            
+            if len(link_parts) > 2:
+                message.command[1] = link_parts[2]
             else:
-                await message.reply_text("❌ Invalid Verification Link!")
-                return
-        except Exception as e:
-            print(f"Verify Error: {e}")
+                return 
+        else:
+            await message.reply_text("❌ Invalid Verification Link!")
             return
+    except Exception as e:
+        print(f"Verify Error: {e}")
+        return
 
     data = message.command[1]
 
@@ -782,4 +790,10 @@ async def premium_plans(client, message):
     except Exception as e:
         print(f"Plan Command Error: {e}")
 
-# 👇 THIS IS THE AUTO INDEX CODE (Only Text, No Edit) 👇
+# Intha helper function-a file-oda end-la pottukonga
+async def auto_delete_helper(msg, delay):
+    await asyncio.sleep(delay)
+    try:
+        await msg.delete()
+    except:
+        pass
