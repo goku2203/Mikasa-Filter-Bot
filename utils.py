@@ -58,9 +58,7 @@ def get_size(size):
         n += 1
     return str(round(size, 2)) + " " + Dic_powerN[n] + 'B'
 
-# 👇 ADDED humanbytes FUNCTION 👇
 def humanbytes(size):
-    """Alias for get_size (Used by plugins/etc.py)"""
     return get_size(size)
 
 def get_file_id(msg: Message):
@@ -103,10 +101,92 @@ def list_to_str(k):
     else:
         return ' '.join(f'{elem}, ' for elem in k)
 
+# --- PARSER FUNCTIONS (Added back for filters.py) ---
+
+def remove_escapes(text: str) -> str:
+    res = ""
+    is_escaped = False
+    for counter in range(len(text)):
+        if is_escaped:
+            res += text[counter]
+            is_escaped = False
+        elif text[counter] == "\\":
+            is_escaped = True
+        else:
+            res += text[counter]
+    return res
+
+def split_quotes(text: str) -> List:
+    if not any(text.startswith(char) for char in START_CHAR):
+        return text.split(None, 1)
+    counter = 1
+    while counter < len(text):
+        if text[counter] == "\\":
+            counter += 1
+        elif text[counter] == text[0] or (text[0] == SMART_OPEN and text[counter] == SMART_CLOSE):
+            break
+        counter += 1
+    else:
+        return text.split(None, 1)
+    key = remove_escapes(text[1:counter].strip())
+    rest = text[counter + 1:].strip()
+    if not key:
+        key = text[0] + text[0]
+    return list(filter(None, [key, rest]))
+
+def parser(text, keyword):
+    if "buttonalert" in text:
+        text = (text.replace("\n", "\\n").replace("\t", "\\t"))
+    buttons = []
+    note_data = ""
+    prev = 0
+    i = 0
+    alerts = []
+    for match in BTN_URL_REGEX.finditer(text):
+        n_escapes = 0
+        to_check = match.start(1) - 1
+        while to_check > 0 and text[to_check] == "\\":
+            n_escapes += 1
+            to_check -= 1
+        if n_escapes % 2 == 0:
+            note_data += text[prev:match.start(1)]
+            prev = match.end(1)
+            if match.group(3) == "buttonalert":
+                if bool(match.group(5)) and buttons:
+                    buttons[-1].append(InlineKeyboardButton(
+                        text=match.group(2),
+                        callback_data=f"alertmessage:{i}:{keyword}"
+                    ))
+                else:
+                    buttons.append([InlineKeyboardButton(
+                        text=match.group(2),
+                        callback_data=f"alertmessage:{i}:{keyword}"
+                    )])
+                i += 1
+                alerts.append(match.group(4))
+            elif bool(match.group(5)) and buttons:
+                buttons[-1].append(InlineKeyboardButton(
+                    text=match.group(2),
+                    url=match.group(4).replace(" ", "")
+                ))
+            else:
+                buttons.append([InlineKeyboardButton(
+                    text=match.group(2),
+                    url=match.group(4).replace(" ", "")
+                )])
+        else:
+            note_data += text[prev:to_check]
+            prev = match.start(1) - 1
+    else:
+        note_data += text[prev:]
+    try:
+        return note_data, buttons, alerts
+    except:
+        return note_data, buttons, None
+
 # --- VERIFICATION & SHORTLINK LOGIC ---
 
 async def get_shortlink(link):
-    """Generate Shortlink using API"""
     if not SHORTLINK_URL or not SHORTLINK_API: return link
     shortener_url = f"https://{SHORTLINK_URL}/api"
     params = {'api': SHORTLINK_API, 'url': link}
@@ -123,7 +203,6 @@ async def get_short(link):
     return await get_shortlink(link)
 
 async def get_verify_link(link):
-    """Alias for commands.py compatibility"""
     return await get_shortlink(link)
 
 async def verify_user(user_id):
