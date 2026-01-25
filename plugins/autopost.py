@@ -26,7 +26,12 @@ def get_clean_name(name):
     clean = re.sub(r'\b(19|20)\d{2}\b', '', clean)
     
     # 4. Remove Channel Names (Add your channel names here)
-    junk_channels = ["@goku_stark", "goku stark", "trollmaa", "backup - tamil movies"]
+    # The regex \b ensures we match whole words, avoiding partial replacements if needed,
+    # but simple replace is often safer for specific strings.
+    junk_channels = [
+        "@goku_stark", "goku stark", "trollmaa", "backup - tamil movies", 
+        "gokustark", "@gokustark"
+    ]
     for junk in junk_channels:
         clean = clean.replace(junk, "")
 
@@ -42,7 +47,11 @@ def get_clean_name(name):
     clean = re.sub(r'\b(dd\+?5\.?1?|dd\+?|aac|ac3|eac3|dts|esub|sub)\b', '', clean)
 
     # 8. Remove "Proper", "True", "AVC", "Remastered"
-    junk_words = ["proper", "true", "avc", "remastered", "uncut", "extended", "dual", "multi", "audio", "tamil", "telugu", "hindi", "eng", "english"]
+    junk_words = [
+        "proper", "true", "avc", "remastered", "uncut", "extended", 
+        "dual", "multi", "audio", "tamil", "telugu", "hindi", "eng", 
+        "english", "tam", "hin", "tel", "kan", "mal", "mkv"
+    ]
     for word in junk_words:
         clean = re.sub(r'\b' + re.escape(word) + r'\b', '', clean)
 
@@ -116,6 +125,8 @@ async def send_batched_post(client, clean_name):
 
     # Categorize
     categorized = { "4K": [], "FULL HD": [], "Only HD": [], "HD-Rip": [] }
+    
+    # We grab the first file's details for the header info
     first_file = unique_files[0]
     
     for file in unique_files:
