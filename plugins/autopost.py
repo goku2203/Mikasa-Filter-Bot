@@ -50,7 +50,7 @@ def get_clean_name(name):
     for junk in junk_list:
         clean = clean.replace(junk, "")
 
-    # 4. Remove Brackets
+    # 4. Remove Brackets with content
     clean = re.sub(r'[\[\(\{].*?[\]\)\}]', '', clean)
 
     # 5. Remove Sizes
@@ -74,8 +74,8 @@ def get_clean_name(name):
     for lang in langs:
         clean = re.sub(r'\b' + re.escape(lang) + r'\b', '', clean)
 
-    # 8. Final Polish
-    clean = re.sub(r'[-_./@|:+]', ' ', clean)
+    # 8. Final Polish (Updated to remove stray brackets)
+    clean = re.sub(r'[\[\]\(\)\{\}-_./@|:+]', ' ', clean)
     clean = re.sub(r'\s+', ' ', clean).strip()
     
     return clean.title()
