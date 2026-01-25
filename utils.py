@@ -101,10 +101,10 @@ def list_to_str(k):
     else:
         return ' '.join(f'{elem}, ' for elem in k)
 
-# --- VERIFICATION & SHORTLINK LOGIC (CORRECTED) ---
+# --- VERIFICATION & SHORTLINK LOGIC ---
 
 async def get_shortlink(link):
-    """Generate Shortlink using API"""
+    """Generate Shortlink using API (Used by Genlink)"""
     if not SHORTLINK_URL or not SHORTLINK_API:
         return link
         
@@ -120,12 +120,14 @@ async def get_shortlink(link):
         logger.error(f"Shortener Error: {e}")
         return link
 
+# 👇 THIS WAS MISSING! ADDED BACK 👇
+async def get_short(link):
+    """Alias for get_shortlink (Used by Extra/short.py)"""
+    return await get_shortlink(link)
+
 async def verify_user(user_id):
     """Set User as Verified in Database"""
-    # Time: 24 Hours (86400 seconds) - Neenga 2 mins potruntheenga, athu romba kammi.
-    # Standard verified time is usually 12-24 hours.
     expiry = datetime.now() + timedelta(seconds=86400) 
-    
     await db.col.update_one(
         {'id': user_id}, 
         {'$set': {'verify_status': {'is_verified': True, 'verify_until': expiry}}}, 
@@ -135,7 +137,7 @@ async def verify_user(user_id):
 async def check_verification(user_id):
     """Check if User is Verified"""
     if not IS_VERIFY: 
-        return True # If Verify system disabled, allow everyone
+        return True
     
     user = await db.col.find_one({'id': user_id})
     if not user: 
@@ -145,17 +147,14 @@ async def check_verification(user_id):
     expiry = verify_status.get('verify_until')
     
     if expiry and datetime.now() < expiry:
-        return True # Still Valid
+        return True 
     
-    return False # Expired
+    return False 
 
 async def get_verify_status(user_id):
     """Wrapper function used by Genlink"""
-    # 1. Admins & Auth Users are always verified
     if user_id in AUTH_USERS:
         return True
-    
-    # 2. Check Database
     return await check_verification(user_id)
 
 # --- SUBSCRIPTION CHECKS ---
