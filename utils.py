@@ -21,6 +21,9 @@ import aiohttp
 import time
 from database.users_chats_db import db
 from datetime import datetime, timedelta
+from info import SHORTLINK_URL, SHORTLINK_API, AUTH_USERS, AUTH_GROUPS, VERIFY_EXPIRE
+from pyshorteners import Shortener
+import datetime
 
 #  @MrMNTG @MusammilN
 #please give credits https://github.com/MN-BOTS/ShobanaFilterBot
@@ -496,3 +499,36 @@ async def check_verification(client, user_id):
     return False # Illana False (Verify Button Varum)
 
 # ----- END -----
+
+async def get_shortlink(url):
+    try:
+        # Use your Shortner Logic here. This is a basic example.
+        # If you have specific API logic, replace this.
+        # Example using simple API call:
+        shortener = Shortener(api_key=SHORTLINK_API)
+        return shortener.short(url)
+    except Exception as e:
+        print(f"Shortlink Error: {e}")
+        return url # Return original URL if failed
+
+async def get_verify_status(user_id):
+    # 1. Admins & Auth Users are always verified
+    if user_id in AUTH_USERS:
+        return True
+        
+    # 2. Check Database for Verification (You need a verify_db logic here)
+    # For now, let's assume a simple logic or need to add db connection
+    # If you don't have a database for verification, use this simple bypass for now:
+    return False # Always asks for verification (Change logic as needed)
+
+def get_size(size):
+    """Size converter"""
+    if not size:
+        return ""
+    power = 2**10
+    n = 0
+    Dic_powerN = {0: ' ', 1: 'Ki', 2: 'Mi', 3: 'Gi', 4: 'Ti'}
+    while size > power:
+        size /= power
+        n += 1
+    return str(round(size, 2)) + " " + Dic_powerN[n] + 'B'
