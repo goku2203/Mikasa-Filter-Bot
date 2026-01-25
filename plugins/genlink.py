@@ -2,9 +2,10 @@ import re
 import asyncio
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from info import ADMINS
+from info import ADMINS, VERIFY
+# 👇 Mukkiyamaana Imports (Database & Utils)
 from database.ia_filterdb import get_file_details, unpack_new_file_id
-from utils import temp
+from utils import get_verify_status, get_shortlink, get_size, temp
 
 # --- SETTINGS ---
 # 3 Hours = 10800 Seconds
@@ -34,21 +35,52 @@ async def start_generator(client, message):
             else:
                 return
 
-            # FIX: Using correct function name 'get_file_details'
+            # 1. Get File Details from Database
             file_details_list = await get_file_details(file_id)
-            
             if not file_details_list:
                 await message.reply_text("❌ File Not Found or Deleted!")
                 return
-
-            # FIX: Get first item from list
             file_info = file_details_list[0]
 
+            # -------------------------------------------------------------
+            # 👇 CLICK TO VERIFY LOGIC (Add Panniyachu) 👇
+            # -------------------------------------------------------------
+            if VERIFY: # Info.py la VERIFY = True nu irukkanum
+                # User Verify panni irukkara nu check panrom
+                is_verified = await get_verify_status(message.from_user.id)
+                
+                if not is_verified:
+                    # Verify pannalana, Shortlink create panrom
+                    verify_link = await get_shortlink(f"https://t.me/{temp.U_NAME}?start={data}")
+                    
+                    btn = [
+                        [InlineKeyboardButton("🟢 Click Here To Verify 🟢", url=verify_link)],
+                        [InlineKeyboardButton("📂 How to Download", url="https://t.me/Tamilmovieslink_bot")]
+                    ]
+                    
+                    # Verify Alert Message
+                    await message.reply_text(
+                        text=(
+                            f"<b>⚠️ நீங்க இன்னும் Verify பண்ணல!</b>\n\n"
+                            f"📁 <b>File:</b> {file_info.file_name}\n"
+                            f"🔐 <b>Size:</b> {get_size(file_info.file_size)}\n\n"
+                            f"<i>கீழே உள்ள பட்டனை கிளிக் செய்து Verify பண்ணுங்க. அப்போதான் படம் வரும்!</i>"
+                        ),
+                        reply_markup=InlineKeyboardMarkup(btn),
+                        quote=True,
+                        protect_content=True
+                    )
+                    return # Stop here! File anuppa koodathu.
+            # -------------------------------------------------------------
+            # 👆 VERIFY LOGIC END 👆
+            # -------------------------------------------------------------
+
+            # User Verified-a iruntha, inga varum:
+            
             # Send the File
             msg = await client.send_cached_media(
                 chat_id=message.from_user.id,
                 file_id=file_id,
-                # FIX: Using .file_name (Object notation)
                 caption=f"📂 <b>{file_info.file_name}</b>\n\n<i>⚠️ This file will be deleted in 3 hours!</i>",
                 protect_content=False 
             )
