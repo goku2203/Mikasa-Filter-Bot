@@ -192,7 +192,7 @@ async def send_batched_post(client, clean_name):
     caption += "━━━━━━━━━━━━━━━━━━━\n"
     caption += "<i>(Click the file size to download)</i>"
 
-    channel_btn = [[InlineKeyboardButton("✨ ᴊᴏɪɴ ᴍᴏᴠɪᴇ ᴜᴘᴅᴀᴛᴇs ✨", url="https://t.me/tamiltechgkofficial")]]
+    caption += "<b><a href='https://t.me/+buF9u_rT7o5mMmRl'>by Own Channel</a></b>"
 
     try:
         await client.send_message(
