@@ -13,46 +13,76 @@ logger = logging.getLogger(__name__)
 BATCH_DATA = {}
 BATCH_TASKS = {} 
 
-# --- 1. SUPER CLEANER ---
+# --- 1. SMART INFO EXTRACTORS ---
+
+def get_audio(filename):
+    if not filename: return "Original Audio"
+    filename = filename.lower()
+    audio = []
+    
+    # Smart Detection (Short & Long forms)
+    # Tam or Tamil -> Tamil
+    if re.search(r'\b(tam|tamil)\b', filename): audio.append("Tamil")
+    if re.search(r'\b(tel|telugu)\b', filename): audio.append("Telugu")
+    if re.search(r'\b(hin|hindi)\b', filename): audio.append("Hindi")
+    if re.search(r'\b(mal|malayalam)\b', filename): audio.append("Malayalam")
+    if re.search(r'\b(kan|kannada)\b', filename): audio.append("Kannada")
+    if re.search(r'\b(eng|english)\b', filename): audio.append("English")
+    if re.search(r'\b(jap|japanese)\b', filename): audio.append("Japanese")
+    if re.search(r'\b(kor|korean)\b', filename): audio.append("Korean")
+    
+    if "multi" in filename or "dual" in filename: 
+        if not audio: audio.append("Multi Audio")
+    
+    return " - ".join(audio) if audio else "Original Audio"
 
 def get_clean_name(name):
     if not name: return ""
     clean = name.lower()
     
-    # 2. Remove File Extension (.mkv, .mp4)
+    # 1. Remove File Extension
     clean = re.sub(r'\.(mkv|mp4|avi|flv|webm)$', '', clean)
     
-    # 3. Remove Year (1990-2029) - We extract it separately
+    # 2. Remove Year (1990-2029)
     clean = re.sub(r'\b(19|20)\d{2}\b', '', clean)
     
-    # 4. Remove Channel Names (Add your channel names here)
-    junk_list = ["@goku_stark", "goku stark", "trollmaa", "@skmain1", "skmain1", "backup - tamil movies", "gokustark", "@gokustark"]
+    # 3. Remove Channel Names & Junk
+    junk_list = [
+        "@goku_stark", "goku stark", "trollmaa", "@skmain1", "skmain1", 
+        "backup - tamil movies", "gokustark", "@gokustark", "www.", ".com"
+    ]
     for junk in junk_list:
         clean = clean.replace(junk, "")
+
+    # 4. Remove Brackets [] () {}
+    clean = re.sub(r'[\[\(\{].*?[\]\)\}]', '', clean)
 
     # 5. Remove Sizes (400mb, 1.4gb)
     clean = re.sub(r'\b\d{3,4}mb\b', '', clean)
     clean = re.sub(r'\b\d+(\.\d+)?gb\b', '', clean)
 
-    # 6. Remove Quality (1080p, 720p...)
-    clean = re.sub(r'\b(2160p|4k|1080p|720p|480p|360p|hdrip|hq|hd|bd|bluray|br-rip|web-dl|web)\b', '', clean)
-
-    # 7. Remove Audio/Codec Junk (Dd+5, Dd5.1, AAC, etc.)
-    clean = re.sub(r'\b(dd\+?5\.?1?|dd\+?|aac|ac3|eac3|dts|esub|sub|original)\b', '', clean)
-
-    # 8. Remove "Proper", "True", "AVC", "Remastered"
-    junk_words = ["proper", "true", "avc", "remastered", "uncut", "extended", "dual", "multi", "audio", "tamil", "telugu", "hindi", "eng", "english", "tam", "hin", "tel", "kan", "mal"]
+    # 6. Remove Quality & Format Junk (The Main Fix)
+    junk_words = [
+        "2160p", "4k", "1080p", "720p", "480p", "360p", 
+        "hdrip", "hq", "hd", "bd", "bluray", "blu-ray", "br-rip", "brrip", "web-dl", "web",
+        "dvdscr", "dvd", "cam", "hdcam", "proper", "true", "avc", "remastered", 
+        "uncut", "extended", "dual", "multi", "audio", "esubs", "esub", "x264", "x265", "hevc",
+        "dd5.1", "dd+", "aac", "ac3"
+    ]
+    
+    # Clean words properly
     for word in junk_words:
         clean = re.sub(r'\b' + re.escape(word) + r'\b', '', clean)
 
-    # 9. Remove ALL Special Characters (Brackets, Dashes, etc.)
-    clean = re.sub(r'[\[\]\(\)\{\}\-_./@|:+]', ' ', clean)
+    # 7. Remove Languages from Title
+    langs = ["tamil", "telugu", "hindi", "english", "tam", "tel", "hin", "eng", "malayalam", "kannada"]
+    for lang in langs:
+        clean = re.sub(r'\b' + re.escape(lang) + r'\b', '', clean)
 
-    # 10. Remove Single Letters at End (Fixes "Leo E")
-    clean = re.sub(r'\s+[a-z]$', '', clean)
-
-    # Final Strip
+    # 8. Final Polish (Remove special chars)
+    clean = re.sub(r'[-_./@|:+]', ' ', clean)
     clean = re.sub(r'\s+', ' ', clean).strip()
+    
     return clean.title()
 
 def get_year(filename):
@@ -76,23 +106,11 @@ def get_quality_short(filename):
     if "720p" in filename: return "HD"
     return "HD-Rip"
 
-def get_audio(filename):
-    if not filename: return "Original Audio"
-    filename = filename.lower()
-    audio = []
-    if "tamil" in filename: audio.append("Tamil")
-    if "telugu" in filename: audio.append("Telugu")
-    if "hindi" in filename: audio.append("Hindi")
-    if "malayalam" in filename: audio.append("Malayalam")
-    if "eng" in filename: audio.append("English")
-    if "multi" in filename or "dual" in filename: audio.append("Multi Audio")
-    return " - ".join(audio) if audio else "Original Audio"
-
 # --- 2. BATCH SENDER ---
 
 async def send_batched_post(client, clean_name):
     try:
-        # 30 Seconds Wait (Safe Time)
+        # 30 Seconds Wait to Group Files
         await asyncio.sleep(30)
     except asyncio.CancelledError:
         return 
@@ -105,7 +123,7 @@ async def send_batched_post(client, clean_name):
     if clean_name in BATCH_TASKS:
         del BATCH_TASKS[clean_name]
 
-    # Check for Duplicates (Based on Size)
+    # Duplicate Removal
     unique_files = []
     seen_sizes = set()
     for f in raw_files_list:
@@ -116,15 +134,30 @@ async def send_batched_post(client, clean_name):
     if not unique_files:
         return
 
-    # Categorize
+    # --- MERGE AUDIO INFO ---
+    # Combine audios from all files if they differ
+    all_audios = set()
+    first_file = unique_files[0]
+    
+    for f in unique_files:
+        # Split "Tamil - Telugu" into individual langs and add to set
+        langs = f['audio'].split(' - ')
+        for l in langs:
+            if l != "Original Audio":
+                all_audios.add(l)
+    
+    # If we found languages, join them. Else use first file's audio.
+    if all_audios:
+        # Sort to keep order consistent (e.g. Tamil first)
+        priority = ['Tamil', 'Telugu', 'Hindi', 'Malayalam', 'Kannada', 'English']
+        sorted_audios = sorted(all_audios, key=lambda x: priority.index(x) if x in priority else 99)
+        final_audio_str = " - ".join(sorted_audios)
+    else:
+        final_audio_str = first_file['audio']
+
+    # --- CATEGORIZE ---
     categorized = { "4K": [], "FULL HD": [], "Only HD": [], "HD-Rip": [] }
     
-    # Use the First File's Clean Name as Movie Title
-    first_file = unique_files[0]
-    movie_name = first_file['name'] # This now comes from Caption if available
-    year = first_file['year']
-    audio = first_file['audio']
-
     for file in unique_files:
         cat = file['category']
         if cat in categorized:
@@ -135,9 +168,9 @@ async def send_batched_post(client, clean_name):
     # --- BUILD CAPTION ---
     
     caption = (
-        f"🎬 <b>{movie_name}</b>\n"
-        f"🗓️ <b>Year:</b> {year}\n"
-        f"🔊 <b>Audio:</b> {audio}\n"
+        f"🎬 <b>{clean_name}</b>\n"
+        f"🗓️ <b>Year:</b> {first_file['year']}\n"
+        f"🔊 <b>Audio:</b> {final_audio_str}\n"
         f"━━━━━━━━━━━━━━━━━━━\n"
     )
 
@@ -167,7 +200,7 @@ async def send_batched_post(client, clean_name):
             text=caption,
             reply_markup=InlineKeyboardMarkup(channel_btn)
         )
-        logger.info(f"✅ Post Sent: {movie_name}")
+        logger.info(f"✅ Post Sent: {clean_name}")
     except Exception as e:
         logger.error(f"❌ Post Failed: {e}")
 
@@ -179,7 +212,7 @@ async def media_handler(client, message):
         media = getattr(message, message.media.value)
         file_id, file_ref = unpack_new_file_id(media.file_id)
         
-        # USE CAPTION FIRST, IF NOT, USE FILENAME
+        # USE CAPTION FIRST
         raw_name = message.caption if message.caption else media.file_name
         
         try:
@@ -192,17 +225,16 @@ async def media_handler(client, message):
         if not UPDATES_CHANNEL:
             return
 
-        # THIS IS THE KEY: CLEAN NAME FROM CAPTION (OR FILENAME)
+        # Clean Name Logic
         clean_name = get_clean_name(raw_name)
         
-        # Extract Quality info from Filename (Because Caption might miss quality info)
-        # But Name comes from Caption
+        # Collect Data
         file_data = {
             'name': clean_name,
             'year': get_year(raw_name),
-            'category': get_quality_category(raw_name),
+            'category': get_quality_category(raw_name), # Check quality from raw text
             'short_q': get_quality_short(raw_name),
-            'audio': get_audio(raw_name),
+            'audio': get_audio(raw_name),               # Check audio from raw text
             'size': get_size(media.file_size),
             'link': f"https://t.me/{temp.U_NAME}?start=filep_{file_id}"
         }
@@ -211,7 +243,7 @@ async def media_handler(client, message):
             BATCH_DATA[clean_name] = []
         BATCH_DATA[clean_name].append(file_data)
 
-        # Reset Timer on new file
+        # Timer Logic
         if clean_name in BATCH_TASKS:
             BATCH_TASKS[clean_name].cancel()
 
@@ -222,3 +254,4 @@ async def media_handler(client, message):
 
     except Exception as e:
         logger.error(f"❌ Error: {e}")
+        
