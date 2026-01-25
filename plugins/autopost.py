@@ -35,6 +35,7 @@ async def start_generator(client, message):
                 return
 
             # FIX: Using correct function name 'get_file_details'
+            # Note: This usually returns a LIST in your bot version
             file_details_list = await get_file_details(file_id)
             
             if not file_details_list:
@@ -48,7 +49,7 @@ async def start_generator(client, message):
             msg = await client.send_cached_media(
                 chat_id=message.from_user.id,
                 file_id=file_id,
-                # FIX: Using .file_name (Object notation)
+                # FIX: Using .file_name (Object notation) which matches your pm_filter.py
                 caption=f"📂 <b>{file_info.file_name}</b>\n\n<i>⚠️ This file will be deleted in 3 hours!</i>",
                 protect_content=False 
             )
@@ -65,6 +66,7 @@ async def start_generator(client, message):
             asyncio.create_task(auto_delete_file(alert))
 
         except Exception as e:
+            # Error vantha user-ku theriyum
             await message.reply_text(f"❌ Error: {e}")
             print(f"Genlink Error: {e}")
-
+            
