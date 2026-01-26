@@ -185,7 +185,7 @@ async def send_batched_post(client, clean_name):
     caption += "<i>(Click the file size to download)</i>\n\n"
     
     # Inga Unga Channel Link Irukkum
-    caption += "<b><a href='https://t.me/tamiltechgkofficial'>by Own Channel</a></b>"
+    caption += "<b><a href='https://t.me/goku_stark'>🅹🅾🅸🅽 🅽🅾🆆</a></b>"
 
     try:
         await client.send_message(
