@@ -74,8 +74,9 @@ def get_clean_name(name):
     for lang in langs:
         clean = re.sub(r'\b' + re.escape(lang) + r'\b', '', clean)
 
-    # 8. Final Polish (Updated to remove stray brackets)
-    clean = re.sub(r'[\[\]\(\)\{\}-_./@|:+]', ' ', clean)
+    # 8. Final Polish (FIXED HERE)
+    # Hyphen is now escaped (\-) to prevent range error
+    clean = re.sub(r'[\[\]\(\)\{\}\-_./@|:+]', ' ', clean)
     clean = re.sub(r'\s+', ' ', clean).strip()
     
     return clean.title()
