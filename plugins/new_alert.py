@@ -46,8 +46,17 @@ def get_name_with_year(name):
 @Client.on_message(filters.chat(CHANNELS) & (filters.document | filters.video | filters.audio), group=10)
 async def alert_handler(client, message):
     try:
+        # --- CHANGE START ---
+        ANIME_CHANNEL_ID = -1002591922002 # Replace with UR Anime Channel ID
+
+        if message.chat.id == ANIME_CHANNEL_ID:
+            return # Anime channel na Alert anupa vendam, Bye!
+        # --- CHANGE END ---
+
         media = getattr(message, message.media.value)
         filename = message.caption if message.caption else media.file_name
+        
+        # ... (Meethi code apdiye irukattum) ...
         
         # Clean Name Edukkurom
         clean_name = get_name_with_year(filename)
