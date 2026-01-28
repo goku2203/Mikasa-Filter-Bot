@@ -8,7 +8,7 @@ from info import CHANNELS
 logger = logging.getLogger(__name__)
 
 # 👇 INGA UNGA PUTHU CHANNEL ID PODUNGA
-LOG_CHANNEL_ID = -1001234567890 
+LOG_CHANNEL_ID = -1003602676231 
 
 # 👇 DUPLICATE CHECK MEMORY
 # Ithu oru chinna memory mathiri, anupuna padatha nyabagam vachikkum
