@@ -198,6 +198,9 @@ async def send_batched_post(client, clean_name):
 
 # --- 3. MAIN LISTENER ---
 
+# Mela imports kitta ithaiyum add pannikonga (Already iruntha vittudunga)
+# ANIME_CHANNEL_ID = -100xxxxxxxxxx  <-- Unga Anime Channel ID inga podunga
+
 @Client.on_message(filters.chat(CHANNELS) & (filters.document | filters.video | filters.audio))
 async def media_handler(client, message):
     try:
@@ -210,9 +213,22 @@ async def media_handler(client, message):
         try:
             media.file_type = message.media.value
             media.caption = message.caption
+            
+            # 1. FILE SAVE AAGIDUM (Rendu channel kum save aaganum)
             await save_file(media)
         except:
             pass 
+
+        # --- CHANGE START ---
+        # 2. INGA THAAN ANIME CHECK PANNANUM
+        
+        ANIME_CHANNEL_ID = -1002591922002 # Replace with UR Anime Channel ID
+        
+        if message.chat.id == ANIME_CHANNEL_ID:
+            # Anime Channel-a iruntha, ingaye STOP panniduvom.
+            # So, keela irukura "Update Channel" posting ethuvum nadakkathu.
+            return 
+        # --- CHANGE END ---
 
         if not UPDATES_CHANNEL:
             return
