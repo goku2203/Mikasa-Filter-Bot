@@ -492,8 +492,8 @@ async def cb_handler(client: Client, query: CallbackQuery):
         InlineKeyboardButton("➕ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ᴠɪʟʟᴀɢᴇ ➕", url=f"http://t.me/{BOT_USERNAME}?startgroup=true")
     ],
     [
-        InlineKeyboardButton("📜 ᴊᴜᴛsᴜ (ʜᴇʟᴘ)", callback_data="help_data"),
-        InlineKeyboardButton("ℹ️ ᴀʙᴏᴜᴛ ᴍᴇ", callback_data="about_data")
+        InlineKeyboardButton("📜 ᴊᴜᴛsᴜ (ʜᴇʟᴘ)", callback_data="help"),
+        InlineKeyboardButton("ℹ️ ᴀʙᴏᴜᴛ ᴍᴇ", callback_data="about")
     ],
     [
         InlineKeyboardButton("⛩️ ᴀɴɪᴍᴇ ᴡᴏʀʟᴅ", url="https://t.me/Anime_single"), 
@@ -514,7 +514,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
         )
         await query.answer('@Goku_Stark')
 
-    elif query.data == "help_data":
+    elif query.data == "help":
         buttons = [
             [
         InlineKeyboardButton("🛠️ ᴍᴀɴᴜᴀʟ ғɪʟᴛᴇʀ", callback_data="manual_filter"),
@@ -538,7 +538,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
             reply_markup=reply_markup,
             parse_mode=enums.ParseMode.HTML
         )
-    elif query.data == "about_data":
+    elif query.data == "about":
         buttons = [[
             InlineKeyboardButton('ʙᴀᴄᴋ', callback_data='start'),
             InlineKeyboardButton('⚡ Contact Admin', url='https://t.me/Tamilmovieslink_bot')
