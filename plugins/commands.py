@@ -291,11 +291,11 @@ async def start(client, message):
                 [InlineKeyboardButton("How to Download 📥", url="https://t.me/howtoo1/3")]
             ]
             verify_msg = await message.reply_text(
-                text=f"<b>⚠️ நீங்க இன்னும் Verify பண்ணல!</b>\n\n<b>📂 File: {file_name}</b>\n<b>💾 Size: {file_size}</b>\n\n<i>கீழே உள்ள பட்டனை கிளிக் செய்து Verify பண்ணுங்க.</i>",
+                text=f"<b>⚠️ நீங்க இன்னும் Verify பண்ணல!</b>\n\n<b>📂 File: {file_name}</b>\n<b>💾 Size: {file_size}</b>\n\n<i>கீழே உள்ள பட்டனை கிளிக் செய்து Verify பண்ணுங்க.</i>\n\n<b>⏳ Time Limit: 1 Hours!</b>",
                 reply_markup=InlineKeyboardMarkup(buttons),
                 protect_content=True
             )
-            asyncio.create_task(auto_delete_message(client, verify_msg, 60))
+            asyncio.create_task(auto_delete_message(client, verify_msg, 3600))
             return
 
     try:
