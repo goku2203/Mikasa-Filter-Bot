@@ -487,18 +487,23 @@ async def cb_handler(client: Client, query: CallbackQuery):
         await query.answer(text=script.TAM_SPELL, show_alert="true")
         
     elif query.data == "start":
-        buttons = [[
-            InlineKeyboardButton('ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘs', url=f'http://t.me/{temp.U_NAME}?startgroup=true')
-            ],[
-            InlineKeyboardButton('ʜᴇʟᴘ', callback_data='help'),
-            InlineKeyboardButton('ᴀʙᴏᴜᴛ', callback_data='about')
-        ],[
-             InlineKeyboardButton(f'Anime Channel​', url='https://t.me/Anime_single'),
-             InlineKeyboardButton(f'ᴍᴀɪɴ ᴄʜᴀɴɴᴇʟ', url='https://t.me/goku_stark')
-         ],[
-            InlineKeyboardButton('⚡ Contact Admin', url='https://t.me/Tamilmovieslink_bot'),
-            InlineKeyboardButton('💎 Premium Plans', callback_data='see_plans')
-            ]]
+        buttons = [
+    [
+        InlineKeyboardButton("➕ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ᴠɪʟʟᴀɢᴇ ➕", url=f"http://t.me/{BOT_USERNAME}?startgroup=true")
+    ],
+    [
+        InlineKeyboardButton("📜 ᴊᴜᴛsᴜ (ʜᴇʟᴘ)", callback_data="help_data"),
+        InlineKeyboardButton("ℹ️ ᴀʙᴏᴜᴛ ᴍᴇ", callback_data="about_data")
+    ],
+    [
+        InlineKeyboardButton("⛩️ ᴀɴɪᴍᴇ ᴡᴏʀʟᴅ", url="https://t.me/Anime_single"), 
+        InlineKeyboardButton("📢 ᴜᴘᴅᴀᴛᴇs", url="https://t.me/super_goku_god")
+    ],
+    [
+        InlineKeyboardButton("⚡ ᴄᴏɴᴛᴀᴄᴛ ᴀᴅᴍɪɴ ⚡", url="https://t.me/Tamilmovieslink_bot"),
+        InlineKeyboardButton("💎 ᴘʀᴇᴍɪᴜᴍ", callback_data="premium_data")
+    ]
+]
         
         reply_markup = InlineKeyboardMarkup(buttons)
         
@@ -510,18 +515,23 @@ async def cb_handler(client: Client, query: CallbackQuery):
         await query.answer('@Goku_Stark')
 
     elif query.data == "help":
-        buttons = [[
-            InlineKeyboardButton('Mᴀɴᴜᴀʟ Fɪʟᴛᴇʀ', callback_data='manuelfilter'),
-            InlineKeyboardButton('Aᴜᴛᴏ Fɪʟᴛᴇʀ', callback_data='autofilter')
-        ], [
-            InlineKeyboardButton('Cᴏɴɴᴇᴄᴛɪᴏɴ', callback_data='coct'),
-            InlineKeyboardButton('Exᴛʀᴀ Tʜɪɴɢs', callback_data='extra')
-        ], [
-            InlineKeyboardButton('Hᴏᴍᴇ', callback_data='start'),
-            InlineKeyboardButton('Bᴀᴄᴋ', callback_data='start')
-        ],[
-            InlineKeyboardButton('⚡ Contact Admin', url='https://t.me/Tamilmovieslink_bot')
-            ]]
+        buttons = [
+            [
+        InlineKeyboardButton("🛠️ ᴍᴀɴᴜᴀʟ ғɪʟᴛᴇʀ", callback_data="manual_filter"),
+        InlineKeyboardButton("🤖 ᴀᴜᴛᴏ ғɪʟᴛᴇʀ", callback_data="auto_filter")
+    ],
+    [
+        InlineKeyboardButton("🔗 ᴄᴏɴɴᴇᴄᴛɪᴏɴs", callback_data="connection"),
+        InlineKeyboardButton("🧩 ᴇxᴛʀᴀs", callback_data="extras")
+    ],
+    [
+        InlineKeyboardButton("🏠 ʜᴏᴍᴇ", callback_data="start_data"),
+        InlineKeyboardButton("🔙 ʀᴇᴛᴜʀɴ", callback_data="start_data")
+    ],
+    [
+        InlineKeyboardButton("⚡ ᴄᴏɴᴛᴀᴄᴛ ᴀᴅᴍɪɴ ⚡", url="https://t.me/Tamilmovieslink_bot")
+    ]
+]
         reply_markup = InlineKeyboardMarkup(buttons)
         await query.message.edit_text(
             text=script.HELP_TXT.format(query.from_user.mention),
