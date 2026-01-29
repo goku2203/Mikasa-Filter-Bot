@@ -295,7 +295,7 @@ async def start(client, message):
                 reply_markup=InlineKeyboardMarkup(buttons),
                 protect_content=True
             )
-            asyncio.create_task(auto_delete_message(verify_msg, 10800))
+            asyncio.create_task(auto_delete_message(client, verify_msg, 60))
             return
 
     try:
