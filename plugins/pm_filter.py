@@ -179,7 +179,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
         await query.message.delete()
 
     # 2. Premium Plans (Idhu SECOND irukkanum - 'elif' use pannanum)
-    elif query.data == "see_plans":
+    elif query.data == "premium_data":
         # 1. Payment Link
         payment_link = "https://upi.pe/gokula8@ibl" 
         # 2. Admin Link
@@ -514,7 +514,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
         )
         await query.answer('@Goku_Stark')
 
-    elif query.data == "help":
+    elif query.data == "help_data":
         buttons = [
             [
         InlineKeyboardButton("🛠️ ᴍᴀɴᴜᴀʟ ғɪʟᴛᴇʀ", callback_data="manual_filter"),
@@ -538,7 +538,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
             reply_markup=reply_markup,
             parse_mode=enums.ParseMode.HTML
         )
-    elif query.data == "about":
+    elif query.data == "about_data":
         buttons = [[
             InlineKeyboardButton('ʙᴀᴄᴋ', callback_data='start'),
             InlineKeyboardButton('⚡ Contact Admin', url='https://t.me/Tamilmovieslink_bot')
