@@ -13,7 +13,7 @@ from pyrogram.errors import ChatAdminRequired, FloodWait, MessageNotModified
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
 from database.ia_filterdb import Media, get_file_details, unpack_new_file_id, get_search_results
 from database.users_chats_db import db
-from info import CHANNELS, ADMINS, LOG_CHANNEL, PICS, BATCH_FILE_CAPTION, CUSTOM_FILE_CAPTION, PROTECT_CONTENT, FILE_CHANNELS, FILE_CHANNEL_SENDING_MODE, FILE_AUTO_DELETE_SECONDS, IS_VERIFY, UPDATES_CHANNEL
+from info import CHANNELS, ADMINS, LOG_CHANNEL, PICS, BATCH_FILE_CAPTION, CUSTOM_FILE_CAPTION, PROTECT_CONTENT, FILE_CHANNELS, FILE_CHANNEL_SENDING_MODE, FILE_AUTO_DELETE_SECONDS, IS_VERIFY, UPDATES_CHANNEL, BOT_USERNAME
 from utils import get_settings, get_size, is_subscribed, save_group_settings, temp, create_invite_links, get_verify_link, check_verification, verify_user
 from database.connections_mdb import active_connection
 
@@ -179,43 +179,46 @@ async def start(client, message):
 
     if len(message.command) != 2:
         buttons = [
-    [
-        InlineKeyboardButton("➕ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ᴠɪʟʟᴀɢᴇ ➕", url=f"http://t.me/{BOT_USERNAME}?startgroup=true")
-    ],
-    [
-        InlineKeyboardButton("📜 ᴊᴜᴛsᴜ (ʜᴇʟᴘ)", callback_data="help_data"),
-        InlineKeyboardButton("ℹ️ ᴀʙᴏᴜᴛ ᴍᴇ", callback_data="about_data")
-    ],
-    [
-        InlineKeyboardButton("⛩️ ᴀɴɪᴍᴇ ᴡᴏʀʟᴅ", url="https://t.me/Anime_single"), 
-        InlineKeyboardButton("📢 ᴜᴘᴅᴀᴛᴇs", url="https://t.me/super_goku_god")
-    ],
-    [
-        InlineKeyboardButton("⚡ ᴄᴏɴᴛᴀᴄᴛ ᴀᴅᴍɪɴ ⚡", url="https://t.me/Tamilmovieslink_bot"),
-        InlineKeyboardButton("💎 ᴘʀᴇᴍɪᴜᴍ", callback_data="premium_data")
-    ]
-]
+            [
+                InlineKeyboardButton("➕ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ᴠɪʟʟᴀɢᴇ ➕", url=f"http://t.me/{BOT_USERNAME}?startgroup=true")
+            ],
+            [
+                InlineKeyboardButton("📜 ᴊᴜᴛsᴜ (ʜᴇʟᴘ)", callback_data="help_data"),
+                InlineKeyboardButton("ℹ️ ᴀʙᴏᴜᴛ ᴍᴇ", callback_data="about_data")
+            ],
+            [
+                InlineKeyboardButton("⛩️ ᴀɴɪᴍᴇ ᴡᴏʀʟᴅ", url="https://t.me/Anime_single"), 
+                InlineKeyboardButton("📢 ᴜᴘᴅᴀᴛᴇs", url="https://t.me/super_goku_god")
+            ],
+            [
+                InlineKeyboardButton("⚡ ᴄᴏɴᴛᴀᴄᴛ ᴀᴅᴍɪɴ ⚡", url="https://t.me/Tamilmovieslink_bot"),
+                InlineKeyboardButton("💎 ᴘʀᴇᴍɪᴜᴍ", callback_data="premium_data")
+            ]
+        ]
         reply_markup = InlineKeyboardMarkup(buttons)
+        
         # 1. Naruto Style Loading Effect
-m = await message.reply_text(
-    text="<b>🌀 𝐆𝐚𝐭𝐡𝐞𝐫𝐢𝐧𝐠 𝐂𝐡𝐚𝐤𝐫𝐚... ⏳</b>",
-    parse_mode=enums.ParseMode.HTML
-)
+        m = await message.reply_text(
+            text="<b>🌀 𝐆𝐚𝐭𝐡𝐞𝐫𝐢𝐧𝐠 𝐂𝐡𝐚𝐤𝐫𝐚... ⏳</b>",
+            parse_mode=enums.ParseMode.HTML
+        )
 
-# 2. Wait for 1.5 seconds (Animation feel kidaikum)
-await asyncio.sleep(1.5)
+        # 2. Wait for 1.5 seconds
+        await asyncio.sleep(1.5)
 
-# 3. Loading text delete pannidunga
-await m.delete()
+        # 3. Loading text delete
+        await m.delete()
 
-# 4. Main Bot Entry with Photo
-await message.reply_photo(
-    photo=random.choice(PICS),
-    caption=script.START_TXT.format(message.from_user.mention, temp.U_NAME, temp.B_NAME),
-    reply_markup=reply_markup,
-    parse_mode=enums.ParseMode.HTML
-)
-return
+        # 4. Main Bot Entry with Photo
+        await message.reply_photo(
+            photo=random.choice(PICS),
+            caption=script.START_TXT.format(message.from_user.mention, temp.U_NAME, temp.B_NAME),
+            reply_markup=reply_markup,
+            parse_mode=enums.ParseMode.HTML
+        )
+        return
+
+    # DEEP LINK HANDLING STARTS HERE
     if not await is_subscribed(message.from_user.id, client):
         links = await create_invite_links(client)
         btn = [[InlineKeyboardButton("🤖 Join Updates Channel", url=url)] for url in links.values()]
@@ -236,14 +239,23 @@ return
         return
 
     if len(message.command) == 2 and message.command[1] in ["subscribe", "error", "okay", "help"]:
-        buttons = [[InlineKeyboardButton('ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘs', url=f'http://t.me/{temp.U_NAME}?startgroup=true')],[InlineKeyboardButton('ʜᴇʟᴘ', callback_data='help'),InlineKeyboardButton('ᴀʙᴏᴜᴛ', callback_data='about')],[InlineKeyboardButton(f'Anime Channel​', url='https://t.me/Anime_single'),InlineKeyboardButton(f'ᴍᴀɪɴ ᴄʜᴀɴɴᴇʟ', url='https://t.me/goku_stark')]]
+        buttons = [
+            [InlineKeyboardButton('ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘs', url=f'http://t.me/{temp.U_NAME}?startgroup=true')],
+            [InlineKeyboardButton('ʜᴇʟᴘ', callback_data='help'), InlineKeyboardButton('ᴀʙᴏᴜᴛ', callback_data='about')],
+            [InlineKeyboardButton(f'Anime Channel​', url='https://t.me/Anime_single'), InlineKeyboardButton(f'ᴍᴀɪɴ ᴄʜᴀɴɴᴇʟ', url='https://t.me/goku_stark')]
+        ]
         reply_markup = InlineKeyboardMarkup(buttons)
-        await message.reply_photo(photo=random.choice(PICS), caption=script.START_TXT.format(message.from_user.mention, temp.U_NAME, temp.B_NAME), reply_markup=reply_markup, parse_mode=enums.ParseMode.HTML)
+        await message.reply_photo(
+            photo=random.choice(PICS),
+            caption=script.START_TXT.format(message.from_user.mention, temp.U_NAME, temp.B_NAME),
+            reply_markup=reply_markup,
+            parse_mode=enums.ParseMode.HTML
+        )
         return
     
     if len(message.command) == 2 and message.command[1].startswith('mntgx'):
         searches = message.command[1].split("-", 1)[1] 
-        search = searches.replace('-',' ')
+        search = searches.replace('-', ' ')
         message.text = search 
         await auto_filter(client, message) 
         return
@@ -256,13 +268,11 @@ return
             if str(message.from_user.id) == check_id:
                 await verify_user(message.from_user.id)
                 
-                # Inga thaan namba add panna code
                 v_msg = await message.reply_text(
                     "<b>✅ Verification Successful!</b>\n\n<i>File Uploading... Please wait...</i>", 
                     protect_content=True
                 )
                 
-                # Background delete task
                 asyncio.create_task(auto_delete_helper(v_msg, 10))
                 
                 if len(link_parts) > 2:
@@ -412,7 +422,7 @@ return
         return await sts.delete()
         
 
-    files_ = await get_file_details(file_id)            
+    files_ = await get_file_details(file_id)           
     if not files_:
         pre, file_id = ((base64.urlsafe_b64decode(data + "=" * (-len(data) % 4))).decode("ascii")).split("_", 1)
         try:
@@ -478,7 +488,7 @@ async def set_auth_channels(client, message: Message):
 
 @Client.on_message(filters.command('channel') & filters.user(ADMINS))
 async def channel_info(bot, message):
-            
+    
     """Send basic information of channel"""
     if isinstance(CHANNELS, (int, str)):
         channels = [CHANNELS]
@@ -804,7 +814,6 @@ async def premium_plans(client, message):
     except Exception as e:
         print(f"Plan Command Error: {e}")
 
-# Intha helper function-a file-oda end-la pottukonga
 async def auto_delete_helper(msg, delay):
     await asyncio.sleep(delay)
     try:
