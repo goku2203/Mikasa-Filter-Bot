@@ -3,6 +3,8 @@ from os import environ
 from Script import script
 from time import time
 import os
+# Add this to info.py
+BOT_USERNAME = environ.get("BOT_USERNAME", "Mikasa_Lovely_bot")
 
 id_pattern = re.compile(r'^.\d+$')
 
