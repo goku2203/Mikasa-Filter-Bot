@@ -8,7 +8,7 @@ from info import CHANNELS
 logger = logging.getLogger(__name__)
 
 # ⚠️ Unga Channel ID Inga Podunga
-LOG_CHANNEL_ID = -1001234567890 
+LOG_CHANNEL_ID = -1003602676231 
 
 # DUPLICATE CHECK MEMORY
 LAST_SENT = {} 
@@ -78,4 +78,3 @@ async def alert_handler(client, message):
         
     except Exception as e:
         logger.error(f"❌ Alert Error: {e}")
-        
