@@ -174,17 +174,14 @@ async def advantage_spoll_choker(bot, query):
 
 @Client.on_callback_query()
 async def cb_handler(client: Client, query: CallbackQuery):
-    # 1. Close Data (Idhu thaan FIRST irukkanum - 'if' use pannanum)
+    # 1. Close Data
     if query.data == "close_data":
         await query.message.delete()
 
-    # 2. Premium Plans (Idhu SECOND irukkanum - 'elif' use pannanum)
+    # 2. Premium Plans
     elif query.data == "premium_data":
-        # 1. Payment Link
         payment_link = "https://upi.pe/gokula8@ibl" 
-        # 2. Admin Link
         admin_link = "https://t.me/Screenshot_gk_bot"
-        # 3. Image
         plan_image = "https://i.ibb.co/YFFY84YX/photo.jpg"
 
         caption = (
@@ -213,16 +210,13 @@ async def cb_handler(client: Client, query: CallbackQuery):
         ]
         
         await query.message.edit_media(
-            media=InputMediaPhoto(media=plan_image, caption=caption), # 👈 'enums.' illa, Ippo Correct!
+            media=InputMediaPhoto(media=plan_image, caption=caption),
             reply_markup=InlineKeyboardMarkup(buttons)
         )
         return await query.answer()
 
-    # 3. Del All Confirm (Idhu THIRD - already unga code la irukkum)
+    # 3. Delete All Confirm
     elif query.data == "delallconfirm":
-        userid = query.from_user.id
-        # ... (Meethi code apdiye irukkattum) ...
-        
         userid = query.from_user.id
         chat_type = query.message.chat.type
 
@@ -255,6 +249,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
             await del_all(query.message, grp_id, title)
         else:
             await query.answer("You need to be Group Owner or an Auth User to do that!", show_alert=True)
+
     elif query.data == "delallcancel":
         userid = query.from_user.id
         chat_type = query.message.chat.type
@@ -274,11 +269,10 @@ async def cb_handler(client: Client, query: CallbackQuery):
                     pass
             else:
                 await query.answer("That's not for you!!", show_alert=True)
+
     elif "groupcb" in query.data:
         await query.answer()
-
         group_id = query.data.split(":")[1]
-
         act = query.data.split(":")[2]
         hr = await client.get_chat(int(group_id))
         title = hr.title
@@ -303,17 +297,13 @@ async def cb_handler(client: Client, query: CallbackQuery):
             parse_mode=enums.ParseMode.MARKDOWN
         )
         return await query.answer('@Goku_Stark')
+
     elif "connectcb" in query.data:
         await query.answer()
-
         group_id = query.data.split(":")[1]
-
         hr = await client.get_chat(int(group_id))
-
         title = hr.title
-
         user_id = query.from_user.id
-
         mkact = await make_active(str(user_id), str(group_id))
 
         if mkact:
@@ -324,16 +314,13 @@ async def cb_handler(client: Client, query: CallbackQuery):
         else:
             await query.message.edit_text('Some error occurred!!', parse_mode=enums.ParseMode.MARKDOWN)
         return await query.answer('@Goku_Stark')
+
     elif "disconnect" in query.data:
         await query.answer()
-
         group_id = query.data.split(":")[1]
-
         hr = await client.get_chat(int(group_id))
-
         title = hr.title
         user_id = query.from_user.id
-
         mkinact = await make_inactive(str(user_id))
 
         if mkinact:
@@ -347,12 +334,11 @@ async def cb_handler(client: Client, query: CallbackQuery):
                 parse_mode=enums.ParseMode.MARKDOWN
             )
         return await query.answer('@Goku_Stark')
+
     elif "deletecb" in query.data:
         await query.answer()
-
         user_id = query.from_user.id
         group_id = query.data.split(":")[1]
-
         delcon = await delete_connection(str(user_id), str(group_id))
 
         if delcon:
@@ -365,11 +351,10 @@ async def cb_handler(client: Client, query: CallbackQuery):
                 parse_mode=enums.ParseMode.MARKDOWN
             )
         return await query.answer('@Goku_Stark')
+
     elif query.data == "backcb":
         await query.answer()
-
         userid = query.from_user.id
-
         groupids = await all_connections(str(userid))
         if groupids is None:
             await query.message.edit_text(
@@ -397,6 +382,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
                 "Your connected group details ;\n\n",
                 reply_markup=InlineKeyboardMarkup(buttons)
             )
+
     elif "alertmessage" in query.data:
         grp_id = query.message.chat.id
         i = query.data.split(":")[1]
@@ -407,7 +393,9 @@ async def cb_handler(client: Client, query: CallbackQuery):
             alert = alerts[int(i)]
             alert = alert.replace("\\n", "\n").replace("\\t", "\t")
             await query.answer(alert, show_alert=True)
-    if query.data.startswith("file"):
+
+    # ERROR FIX: 'if' ah 'elif' ah maathiruken
+    elif query.data.startswith("file"):
         ident, file_id = query.data.split("#")
         files_ = await get_file_details(file_id)
         if not files_:
@@ -445,6 +433,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
             await query.answer(url=f"https://t.me/{temp.U_NAME}?start={ident}_{file_id}")
         except Exception as e:
             await query.answer(url=f"https://t.me/{temp.U_NAME}?start={ident}_{file_id}")
+
     elif query.data.startswith("checksub"):
         if not await is_subscribed(query.from_user.id, client):
             await query.answer("I Like Your Smartness, But Don't Be Oversmart", show_alert=True)
@@ -474,9 +463,11 @@ async def cb_handler(client: Client, query: CallbackQuery):
             caption=f_caption,
             protect_content=True if ident == 'checksubp' else False
         )
+
     elif query.data == "pages":
         await query.answer()
-#ALERT FN IN SPELL CHECK FOR LANGAUGES TO KNOW HOW TO TYPE MOVIES esp english spell check goto adv spell check to check donot change the codes      
+
+    # SPELL CHECK BUTTONS
     elif query.data == "esp":
         await query.answer(text=script.ENG_SPELL, show_alert="true")
     elif query.data == "msp":
@@ -486,24 +477,25 @@ async def cb_handler(client: Client, query: CallbackQuery):
     elif query.data == "tsp":
         await query.answer(text=script.TAM_SPELL, show_alert="true")
         
-    elif query.data == "start":
+    # ERROR FIX: 'start_data' add panniruken (BACK button work aaga)
+    elif query.data == "start" or query.data == "start_data":
         buttons = [
-    [
-        InlineKeyboardButton("➕ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ᴠɪʟʟᴀɢᴇ ➕", url=f"http://t.me/{BOT_USERNAME}?startgroup=true")
-    ],
-    [
-        InlineKeyboardButton("📜 ᴊᴜᴛsᴜ (ʜᴇʟᴘ)", callback_data="help"),
-        InlineKeyboardButton("ℹ️ ᴀʙᴏᴜᴛ ᴍᴇ", callback_data="about")
-    ],
-    [
-        InlineKeyboardButton("⛩️ ᴀɴɪᴍᴇ ᴡᴏʀʟᴅ", url="https://t.me/Anime_single"), 
-        InlineKeyboardButton("📢 ᴜᴘᴅᴀᴛᴇs", url="https://t.me/super_goku_god")
-    ],
-    [
-        InlineKeyboardButton("⚡ ᴄᴏɴᴛᴀᴄᴛ ᴀᴅᴍɪɴ ⚡", url="https://t.me/Tamilmovieslink_bot"),
-        InlineKeyboardButton("💎 ᴘʀᴇᴍɪᴜᴍ", callback_data="premium_data")
-    ]
-]
+            [
+                InlineKeyboardButton("➕ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ᴠɪʟʟᴀɢᴇ ➕", url=f"http://t.me/{temp.U_NAME}?startgroup=true")
+            ],
+            [
+                InlineKeyboardButton("📜 ᴊᴜᴛsᴜ (ʜᴇʟᴘ)", callback_data="help"),
+                InlineKeyboardButton("ℹ️ ᴀʙᴏᴜᴛ ᴍᴇ", callback_data="about")
+            ],
+            [
+                InlineKeyboardButton("⛩️ ᴀɴɪᴍᴇ ᴡᴏʀʟᴅ", url="https://t.me/Anime_single"), 
+                InlineKeyboardButton("📢 ᴜᴘᴅᴀᴛᴇs", url="https://t.me/super_goku_god")
+            ],
+            [
+                InlineKeyboardButton("⚡ ᴄᴏɴᴛᴀᴄᴛ ᴀᴅᴍɪɴ ⚡", url="https://t.me/Tamilmovieslink_bot"),
+                InlineKeyboardButton("💎 ᴘʀᴇᴍɪᴜᴍ", callback_data="premium_data")
+            ]
+        ]
         
         reply_markup = InlineKeyboardMarkup(buttons)
         
@@ -517,38 +509,40 @@ async def cb_handler(client: Client, query: CallbackQuery):
     elif query.data == "help":
         buttons = [
             [
-        InlineKeyboardButton("🛠️ ᴍᴀɴᴜᴀʟ ғɪʟᴛᴇʀ", callback_data="manual_filter"),
-        InlineKeyboardButton("🤖 ᴀᴜᴛᴏ ғɪʟᴛᴇʀ", callback_data="auto_filter")
-    ],
-    [
-        InlineKeyboardButton("🔗 ᴄᴏɴɴᴇᴄᴛɪᴏɴs", callback_data="connection"),
-        InlineKeyboardButton("🧩 ᴇxᴛʀᴀs", callback_data="extras")
-    ],
-    [
-        InlineKeyboardButton("🏠 ʜᴏᴍᴇ", callback_data="start_data"),
-        InlineKeyboardButton("🔙 ʀᴇᴛᴜʀɴ", callback_data="start_data")
-    ],
-    [
-        InlineKeyboardButton("⚡ ᴄᴏɴᴛᴀᴄᴛ ᴀᴅᴍɪɴ ⚡", url="https://t.me/Tamilmovieslink_bot")
-    ]
-]
+                InlineKeyboardButton("🛠️ ᴍᴀɴᴜᴀʟ ғɪʟᴛᴇʀ", callback_data="manual_filter"),
+                InlineKeyboardButton("🤖 ᴀᴜᴛᴏ ғɪʟᴛᴇʀ", callback_data="auto_filter")
+            ],
+            [
+                InlineKeyboardButton("🔗 ᴄᴏɴɴᴇᴄᴛɪᴏɴs", callback_data="connection"),
+                InlineKeyboardButton("🧩 ᴇxᴛʀᴀs", callback_data="extras")
+            ],
+            [
+                InlineKeyboardButton("🏠 ʜᴏᴍᴇ", callback_data="start_data"),
+                InlineKeyboardButton("🔙 ʀᴇᴛᴜʀɴ", callback_data="start_data")
+            ],
+            [
+                InlineKeyboardButton("⚡ ᴄᴏɴᴛᴀᴄᴛ ᴀᴅᴍɪɴ ⚡", url="https://t.me/Tamilmovieslink_bot")
+            ]
+        ]
         reply_markup = InlineKeyboardMarkup(buttons)
         await query.message.edit_text(
             text=script.HELP_TXT.format(query.from_user.mention),
             reply_markup=reply_markup,
             parse_mode=enums.ParseMode.HTML
         )
+
     elif query.data == "about":
         buttons = [[
             InlineKeyboardButton('ʙᴀᴄᴋ', callback_data='start'),
             InlineKeyboardButton('⚡ Contact Admin', url='https://t.me/Tamilmovieslink_bot')
-            ]]
+        ]]
         reply_markup = InlineKeyboardMarkup(buttons)
         await query.message.edit_text(
             text=script.ABOUT_TXT.format(temp.B_NAME),
             reply_markup=reply_markup,
             parse_mode=enums.ParseMode.HTML
         )
+
     elif query.data == "source":
         buttons = [[
             InlineKeyboardButton('ʙᴀᴄᴋ', callback_data='about'),
@@ -560,7 +554,9 @@ async def cb_handler(client: Client, query: CallbackQuery):
             reply_markup=reply_markup,
             parse_mode=enums.ParseMode.HTML
         )
-    elif query.data == "manuelfilter":
+
+    # ERROR FIX: 'manuelfilter' -> 'manual_filter'
+    elif query.data == "manual_filter":
         buttons = [[
             InlineKeyboardButton('ʙᴀᴄᴋ', callback_data='help'),
             InlineKeyboardButton('⚡ Contact Admin', url='https://t.me/Tamilmovieslink_bot'),
@@ -572,9 +568,10 @@ async def cb_handler(client: Client, query: CallbackQuery):
             reply_markup=reply_markup,
             parse_mode=enums.ParseMode.HTML
         )
+
     elif query.data == "button":
         buttons = [[
-           InlineKeyboardButton('ʙᴀᴄᴋ', callback_data='help'),
+            InlineKeyboardButton('ʙᴀᴄᴋ', callback_data='help'),
             InlineKeyboardButton('⚡ Contact Admin', url='https://t.me/Tamilmovieslink_bot')
         ]]
         reply_markup = InlineKeyboardMarkup(buttons)
@@ -583,9 +580,11 @@ async def cb_handler(client: Client, query: CallbackQuery):
             reply_markup=reply_markup,
             parse_mode=enums.ParseMode.HTML
         )
-    elif query.data == "autofilter":
+
+    # ERROR FIX: 'autofilter' -> 'auto_filter'
+    elif query.data == "auto_filter":
         buttons = [[
-           InlineKeyboardButton('ʙᴀᴄᴋ', callback_data='help'),
+            InlineKeyboardButton('ʙᴀᴄᴋ', callback_data='help'),
             InlineKeyboardButton('⚡ Contact Admin', url='https://t.me/Tamilmovieslink_bot')
         ]]
         reply_markup = InlineKeyboardMarkup(buttons)
@@ -594,9 +593,11 @@ async def cb_handler(client: Client, query: CallbackQuery):
             reply_markup=reply_markup,
             parse_mode=enums.ParseMode.HTML
         )
-    elif query.data == "coct":
+
+    # ERROR FIX: 'coct' -> 'connection'
+    elif query.data == "connection":
         buttons = [[
-             InlineKeyboardButton('ʙᴀᴄᴋ', callback_data='help'),
+            InlineKeyboardButton('ʙᴀᴄᴋ', callback_data='help'),
             InlineKeyboardButton('⚡ Contact Admin', url='https://t.me/Tamilmovieslink_bot')
         ]]
         reply_markup = InlineKeyboardMarkup(buttons)
@@ -605,7 +606,9 @@ async def cb_handler(client: Client, query: CallbackQuery):
             reply_markup=reply_markup,
             parse_mode=enums.ParseMode.HTML
         )
-    elif query.data == "extra":
+
+    # ERROR FIX: 'extra' -> 'extras'
+    elif query.data == "extras":
         buttons = [[
             InlineKeyboardButton('ʙᴀᴄᴋ', callback_data='help'),
             InlineKeyboardButton('ᴀᴅᴍɪɴ', callback_data='admin'),
@@ -617,6 +620,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
             reply_markup=reply_markup,
             parse_mode=enums.ParseMode.HTML
         )
+
     elif query.data == "admin":
         buttons = [[
             InlineKeyboardButton('ʙᴀᴄᴋ', callback_data='help'),
@@ -628,6 +632,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
             reply_markup=reply_markup,
             parse_mode=enums.ParseMode.HTML
         )
+
     elif query.data == "stats":
         buttons = [[
             InlineKeyboardButton('ʙᴀᴄᴋ', callback_data='help'),
@@ -647,6 +652,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
             reply_markup=reply_markup,
             parse_mode=enums.ParseMode.HTML
         )
+
     elif query.data == "rfrsh":
         await query.answer("Fetching MongoDb DataBase")
         buttons = [[
@@ -667,6 +673,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
             reply_markup=reply_markup,
             parse_mode=enums.ParseMode.HTML
         )
+
     elif query.data.startswith("setgs"):
         ident, set_type, status, grp_id = query.data.split("#")
         grpid = await active_connection(str(query.from_user.id))
