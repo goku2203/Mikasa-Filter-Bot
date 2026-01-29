@@ -1,185 +1,209 @@
 class script(object):
-    START_TXT = """ Hᴇʟʟᴏ {}.
-𝖨𝗆 𝖺𝗇 𝖺𝗎𝗍𝗈 𝖿𝗂𝗅𝗍𝖾𝗋 𝖻𝗈𝗍 𝗐𝗁𝗂𝖼𝗁 𝖼𝖺𝗇 𝗉𝗋𝗈𝗏𝗂𝖽𝖾 𝗆𝗈𝗏𝗂𝖾𝗌 𝗂𝗇 𝗒𝗈𝗎𝗋 𝗀𝗋𝗈𝗎𝗉𝗌.
-+ 𝖠𝖽𝖽 𝖬𝖾 𝖳𝗈 𝖸𝗈𝗎𝗋 𝖦𝗋𝗈𝗎𝗉 + 𝖺𝗇𝖽 𝗉𝗋𝗈𝗆𝗈𝗍𝖾 𝗆𝖾 𝖺𝗌 𝖺𝖽𝗆𝗂𝗇 𝗍𝗈 𝗅𝖾𝗍 𝗆𝖾 𝗀𝖾𝗍 𝗂𝗇 𝖺𝖼𝗍𝗂𝗈𝗇."""
-    HELP_TXT = """
-     Hey  {} 
-Currently using free server so please Dont kill Me...
-"""
-    ABOUT_TXT = """<b>
-◎ Cʀᴇᴀᴛᴏʀ: <a href=https://t.me/Goku_Stark>Click Here</a>
-◎ Lᴀɴɢᴜᴀɢᴇ: Pʏᴛʜᴏɴ 3
-◎ Dᴀᴛᴀ Bᴀsᴇ: Mᴏɴɢᴏ DB
-◎ Bᴏᴛ Sᴇʀᴠᴇʀ: KoYeb</b>"""
-    SOURCE_TXT = """<b>NOTE:</b>
-- Mikasa Filter Bot  is a open source project. 
-- Source - <ahref=https://t.me/Goku_Stark>Click Here to get source code</a>
-
-<b>DEVS:</b>
--<a href=https://t.me/Goku_Stark> Click Here</a>"""
-    MANUELFILTER_TXT = """Help: <b>Filters</b>
-- Filter is the feature were users can set automated replies for a particular keyword and shobana will respond whenever a keyword is found the message
-<b>NOTE:</b>
-1. This Bot should have admin privillage.
-2. only admins can add filters in a chat.
-3. alert buttons have a limit of 64 characters.
-
-<b>Commands and Usage:</b>
-• /filter - <code>add a filter in chat</code>
-• /filters - <code>list all the filters of a chat</code>
-• /del - <code>delete a specific filter in chat</code>
-• /delall - <code>delete the whole filters in a chat (chat owner only)</code>"""
-    BUTTON_TXT = """Help: <b>Buttons</b>
-
-- This Bot Supports both url and alert inline buttons.
-
-<b>NOTE:</b>
-1. Telegram will not allows you to send buttons without any content, so content is mandatory.
-2. This Bot supports buttons with any telegram media type.
-3. Buttons should be properly parsed as markdown format
-
-<b>URL buttons:</b>
-<code>[Button Text](buttonurl:https://github.com/mn-bots/ShobanaFilterBot)</code>
-
-<b>Alert buttons:</b>
-<code>[Button Text](buttonalert:This is an alert message)</code>"""
-    AUTOFILTER_TXT = """
-
-<b>ɴᴏᴛᴇ: Fɪʟᴇ Iɴᴅᴇx</b>
-1. ᴍᴀᴋᴇ ᴍᴇ ᴛʜᴇ ᴀᴅᴍɪɴ ᴏꜰ ʏᴏᴜʀ ᴄʜᴀɴɴᴇʟ ɪꜰ ɪᴛ'ꜱ ᴘʀɪᴠᴀᴛᴇ.
-2. ᴍᴀᴋᴇ ꜱᴜʀᴇ ᴛʜᴀᴛ ʏᴏᴜʀ ᴄʜᴀɴɴᴇʟ ᴅᴏᴇꜱ ɴᴏᴛ ᴄᴏɴᴛᴀɪɴꜱ ᴄᴀᴍʀɪᴘꜱ, ᴘᴏʀɴ ᴀɴᴅ ꜰᴀᴋᴇ ꜰɪʟᴇꜱ.
-3. ꜰᴏʀᴡᴀʀᴅ ᴛʜᴇ ʟᴀꜱᴛ ᴍᴇꜱꜱᴀɢᴇ ᴛᴏ ᴍᴇ ᴡɪᴛʜ Qᴜᴏᴛᴇꜱ. ɪ'ʟʟ ᴀᴅᴅ ᴀʟʟ ᴛʜᴇ ꜰɪʟᴇꜱ ɪɴ ᴛʜᴀᴛ ᴄʜᴀɴɴᴇʟ ᴛᴏ ᴍʏ ᴅʙ.
-
-<b>Nᴏᴛᴇ: AᴜᴛᴏFɪʟᴛᴇʀ</b>
-1. Aᴅᴅ ᴛʜᴇ ʙᴏᴛ ᴀs ᴀᴅᴍɪɴ ᴏɴ ʏᴏᴜʀ ɢʀᴏᴜᴘ.
-2. Usᴇ /connect ᴀɴᴅ ᴄᴏɴɴᴇᴄᴛ ʏᴏᴜʀ ɢʀᴏᴜᴘ ᴛᴏ ᴛʜᴇ ʙᴏᴛ.
-3. Usᴇ /settings ᴏɴ ʙᴏᴛ's PM ᴀɴᴅ ᴛᴜʀɴ ᴏɴ AᴜᴛᴏFɪʟᴛᴇʀ ᴏɴ ᴛʜᴇ sᴇᴛᴛɪɴɢs ᴍᴇɴᴜ.."""
-    CONNECTION_TXT = """Help: <b>Connections</b>
-
-- Used to connect bot to PM for managing filters 
-- it helps to avoid spamming in groups.
-
-<b>NOTE:</b>
-1. Only admins can add a connection.
-2. Send <code>/connect</code> for connecting me to ur PM
-
-<b>Commands and Usage:</b>
-• /connect  - <code>connect a particular chat to your PM</code>
-• /disconnect  - <code>disconnect from a chat</code>
-• /connections - <code>list all your connections</code>"""
-    EXTRAMOD_TXT = """Help: <b>Extra Modules</b>
-
-<b>NOTE:</b>
-these are the extra features of ShobanaFilterBot
-
-<b>Commands and Usage:</b>
-• /id - <code>get id of a specified user.</code>
-• /info  - <code>get information about a user.</code>
-• /imdb  - <code>get the film information from IMDb source.</code>
-• /search  - <code>get the film information from various sources.</code>
-• /start - <code>Check I'm Alive.</code>
-• /ping - <code>check ping.</code>
-• /usage - <code>usage of bot.</code>
-• /info - <code>User info .</code>
-• /id - <code>User id  .</code>
-• /broadcast - <code>Broadcast (owner only).</code>
-"""
-    ADMIN_TXT = """Help: <b>Admin mods</b>
-
-<b>NOTE:</b>
-This module only works for my admins
-
-<b>Commands and Usage:</b>
-• /logs - <code>to get the rescent errors</code>
-• /stats - <code>to get status of files in db.</code>
-• /delete - <code>to delete a specific file from db.</code>
-• /users - <code>to get list of my users and ids.</code>
-• /chats - <code>to get list of the my chats and ids </code>
-• /leave  - <code>to leave from a chat.</code>
-• /disable  -  <code>do disable a chat.</code>
-• /ban  - <code>to ban a user.</code>
-• /unban  - <code>to unban a user.</code>
-• /channel - <code>to get list of total connected channels</code>
-• /broadcast - <code>to broadcast a message to all users</code>"""
-    STATUS_TXT = """★ 𝚃𝙾𝚃𝙰𝙻 𝙵𝙸𝙻𝙴𝚂: <code>{}</code>
- 𝚃𝙾𝚃𝙰𝙻 𝚄𝚂𝙴𝚁𝚂: <code>{}</code>
- 𝚃𝙾𝚃𝙰𝙻 𝙲𝙷𝙰𝚃𝚂: <code>{}</code>
- 𝚄𝚂𝙴𝙳 𝚂𝚃𝙾𝚁𝙰𝙶𝙴: <code>{}</code> 
- 𝙵𝚁𝙴𝙴 𝚂𝚃𝙾𝚁𝙰𝙶𝙴: <code>{}</code> """
-    LOG_TEXT_G = """#NewGroup
-Group = {}(<code>{}</code>)
-Total Members = <code>{}</code>
-Added By - {}
-"""
-    RESULT_TXT="""<blockquote> Hey,     </blockquote>
-<blockquote>Jᴜsᴛ Sᴇᴇ Wʜᴀᴛ I Found Fᴏʀ Yᴏᴜʀ Qᴜᴇʀʏ </blockquote>"""
-
-    CUSTOM_FILE_CAPTION = """📂Fɪʟᴇɴᴀᴍᴇ : {file_name}
-FɪʟᴇSɪᴢᴇ : {file_size}
-
-╔═  ᴊᴏɪɴ ᴡɪᴛʜ ᴜs   ═╗
- Jᴏɪɴ :- [ANIME CHANNEL](https://t.me/Anime_single)
- Jᴏɪɴ :- [MY OWN CHANNEL](https://t.me/tamiltechgkofficial)
-╚═  ᴊᴏɪɴ ᴡɪᴛʜ ᴜs    ═╝
-
-⚠️ <b>This file will be deleted from here within 1 minute as it has copyright ... !!!</b>
-
-<b>Due to copyright, the file will be deleted from here within 1 minute, so please move it somewhere else before downloading!</b>
-"""
-
+    START_TXT = """<b>👋 Hello {}!</b>
     
-    RESTART_GC_TXT = """
-<b>𝖡𝗈𝗍 𝖱𝖾𝗌𝗍𝖺𝗋𝗍𝖾𝖽 !</b>
+<b>I am an Advanced Auto-Filter Bot. 🤖</b>
 
-📅 𝖣𝖺𝗍𝖾 : <code>{}</code>
-⏰ 𝖳𝗂𝗆𝖾 : <code>{}</code>
-🌐 𝖳𝗂𝗆𝖾𝗓𝗈𝗇𝖾 : <code>Asia/Kolkata</code>
-🛠️ 𝖡𝗎𝗂𝗅𝖽 𝖲𝗍𝖺𝗍𝗎𝗌 : <code>𝗏1 [ 𝖲𝗍able ]</code></b>"""
-    
-    LOG_TEXT_P = """#NewUser
-ID - <code>{}</code>
-Name - {}
+<i>I can provide Movies, Series, and Anime directly in your groups with high speed! ⚡</i>
+
+<b>👇 How to use me?</b>
+1. Add me to your group.
+2. Make me an <b>Admin</b>.
+3. Enjoy unlimited files! 🎬
+
+<i>Click the buttons below to explore more.</i>"""
+
+    HELP_TXT = """<b>⚙️ Help & System Status</b>
+
+<b>👤 User:</b> {}
+<b>📡 Server:</b> Free Tier (Experimental) ⚠️
+
+<i>I am currently running on a free server, so I might be a little slow. Please be patient! 🐢</i>
+
+<b>🚫 Important:</b>
+Please <b>Don't Spam</b> commands, or I might crash (die) 😵.
+
+<b>👇 Choose a category below:</b>"""
+
+    ABOUT_TXT = """<b>✯ 𝙼𝚈 𝙿𝚁𝙾𝙵𝙸𝙻𝙴 ✯</b>
+
+<b>🤖 𝐍𝐚𝐦𝐞: Auto Filter Bot</b>
+<b>👑 𝐂𝐫𝐞𝐚𝐭𝐨𝐫: <a href="https://t.me/Goku_Stark">Goku Stark</a></b>
+<b>💻 𝐋𝐚𝐧𝐠𝐮𝐚𝐠𝐞: Python 3</b>
+<b>💾 𝐃𝐚𝐭𝐚𝐛𝐚𝐬𝐞: MongoDB</b>
+<b>📡 𝐒𝐞𝐫𝐯𝐞𝐫: Koyeb</b>"""
+
+    SOURCE_TXT = """<b>🛠️ Source Code</b>
+
+<i>This project is Open Source. You can find the code below.</i>
+
+<b>👨‍💻 Developer:</b> <a href="https://t.me/Goku_Stark">Goku Stark</a>
+<b>📂 Repository:</b> <a href="https://t.me/Goku_Stark">Click Here</a>"""
+
+    MANUELFILTER_TXT = """<b>🛠️ Manual Filters Help</b>
+
+<i>Filters allow the bot to reply automatically when a specific keyword is detected.</i>
+
+<b>📝 Rules:</b>
+1. Bot must be an <b>Admin</b>.
+2. Only Admins can set filters.
+3. Buttons have a 64-character limit.
+
+<b>🎮 Commands:</b>
+• /filter - <code>Add a new filter</code>
+• /filters - <code>List all active filters</code>
+• /del - <code>Delete a specific filter</code>
+• /delall - <code>Delete all filters (Owner only)</code>"""
+
+    BUTTON_TXT = """<b>🔘 Button Formatting Help</b>
+
+<i>I support both URL and Alert (Pop-up) buttons.</i>
+
+<b>⚠️ Note:</b> Buttons must have content (text/media).
+
+<b>1️⃣ URL Button Format:</b>
+<code>[Button Text](buttonurl:https://t.me/Goku_Stark)</code>
+
+<b>2️⃣ Alert Button Format:</b>
+<code>[Button Text](buttonalert:This is a pop-up message!)</code>"""
+
+    AUTOFILTER_TXT = """<b>🤖 Auto-Filter Guide</b>
+
+<b>1️⃣ For Private Channels:</b>
+• Make me an <b>Admin</b> in your channel.
+• Ensure the channel has <b>NO</b> porn/fake files.
+• Forward the last message from your channel to me (with quotes).
+• I will index all files automatically! 📂
+
+<b>2️⃣ For Groups:</b>
+• Add me as an <b>Admin</b>.
+• Use <code>/connect</code> to link your group to my PM.
+• Use <code>/settings</code> in PM to enable Auto-Filter.
 """
-    SPOLL_NOT_FND="""
-I couldn't find anything related to your request. 
-Try reading the instruction below 
-<blockquote>
-1️ Ask in Correct Spelling
-2️ Don't ask Movies which are not Realased on OTT PLATFORMS
-3️ Possible  ASK [movie name langauge] like this or [movie year] </blockquote>
-OR
-<b> Tʜɪs Mᴏᴠɪᴇ Is Nᴏᴛ Aᴅᴅᴇᴅ Tᴏ DB</b>
-<pre>Report To ADMIN BY USING /bugs command </pre> 
-    """
-#SPELL CHECK LANGUAGES TO KNOW callback
-    ENG_SPELL="""Please Note Below📓
-1️⃣ Ask in Correct Spelling
-2️⃣ Don't ask Movies which are not Realased on OTT PLATFORMS
-3️⃣ Possible  ASK [movie name langauge] like this or [movie year]
-    """
-    MAL_SPELL="""ദയവായി താഴെ ശ്രദ്ധിക്കുക📓
-1️⃣ ശരിയായ അക്ഷരവിന്യാസത്തിൽ ചോദിക്കുക
-2️⃣ OTT പ്ലാറ്റ്‌ഫോമുകളിൽ റിലീസ് ചെയ്യാത്ത സിനിമകൾ ചോദിക്കരുത്
-3️⃣ ഇത് പോലെ [സിനിമയുടെ പേര് ഭാഷ] അല്ലെങ്കിൽ [സിനിമ വർഷം] ചോദിക്കാം
-    """
-    HIN_SPELL="""कृपया नीचे ध्यान दें📓
-1️⃣ सही वर्तनी में पूछें
-2️⃣ उन फिल्मों के बारे में न पूछें जो ओटीटी प्लेटफॉर्म पर रिलीज नहीं हुई हैं
-3️⃣ संभव है पूछें [मूवी का नाम भाषा] इस तरह या [मूवी वर्ष]
-    """
-    TAM_SPELL="""கீழே கவனிக்கவும்📓
-1️⃣ சரியான எழுத்துப்பிழையில் கேளுங்கள்
-2️⃣ வெளியாகாத திரைப்படங்களைக் கேட்காதீர்கள்
-3️⃣ இந்த வடிவத்தில் கேளுங்கள் [திரைப்படத்தின் பெயர், ஆண்டு]
-    """
 
-    CHK_MOV_ALRT="""♻️ ᴄʜᴇᴄᴋɪɴɢ ꜰɪʟᴇ ᴏɴ ᴍʏ ᴅᴀᴛᴀʙᴀꜱᴇ... ♻️"""
-    
-    OLD_MES=""" 𝐘𝐨𝐮 𝐚𝐫𝐞 𝐮𝐬𝐢𝐧𝐠 𝐨𝐧𝐞 𝐨𝐟 𝐦𝐲 𝐨𝐥𝐝 𝐦𝐞𝐬𝐬𝐚𝐠𝐞𝐬🤔, 𝐩𝐥𝐞𝐚𝐬𝐞 𝐬𝐞𝐧𝐝 𝐭𝐡𝐞 𝐫𝐞𝐪𝐮𝐞𝐬𝐭 𝐚𝐠𝐚𝐢𝐧"""
-    
-    MOV_NT_FND="""<b>Tʜɪs Mᴏᴠɪᴇ Is Nᴏᴛ Yᴇᴛ Rᴇᴀʟᴇsᴇᴅ Oʀ Aᴅᴅᴇᴅ Tᴏ DB</b>
-<pre>Report To ADMIN BY USING /bugs command </pre> 
-"""
-    RESTART_TXT = """
-<b><u>𝖡𝗈𝗍 𝖱𝖾𝗌𝗍𝖺𝗋𝗍𝖾𝖽 ✅</u></b>"""
+    CONNECTION_TXT = """<b>🔗 Connection Manager</b>
 
+<i>Connect your groups to my PM to manage filters easily and avoid spam.</i>
+
+<b>🎮 Commands:</b>
+• /connect - <code>Connect a group to PM</code>
+• /disconnect - <code>Disconnect a group</code>
+• /connections - <code>View active connections</code>"""
+
+    EXTRAMOD_TXT = """<b>🧩 Extra Modules</b>
+
+<i>Here are some cool extra features I offer!</i>
+
+<b>🎮 Commands:</b>
+• /id - <code>Get User ID</code>
+• /info - <code>Get User Info</code>
+• /imdb - <code>Search IMDb Details</code>
+• /search - <code>Search across sources</code>
+• /ping - <code>Check Bot Latency</code>
+• /stats - <code>Check Bot Statistics</code>"""
+
+    ADMIN_TXT = """<b>🛡️ Admin Control Panel</b>
+
+<i>Commands strictly for Bot Admins only.</i>
+
+<b>🎮 Commands:</b>
+• /logs - <code>View Error Logs</code>
+• /stats - <code>Database Statistics</code>
+• /delete - <code>Delete file from DB</code>
+• /users - <code>List all users</code>
+• /chats - <code>List all groups</code>
+• /ban - <code>Ban a user</code>
+• /unban - <code>Unban a user</code>
+• /broadcast - <code>Send message to all users</code>"""
+
+    STATUS_TXT = """<b>📊 <u>Database Statistics</u></b>
+
+<b>📂 Total Files:</b> <code>{}</code>
+<b>👤 Total Users:</b> <code>{}</code>
+<b>👥 Total Chats:</b> <code>{}</code>
+<b>💾 Used Storage:</b> <code>{}</code>
+<b>🆓 Free Storage:</b> <code>{}</code>"""
+
+    LOG_TEXT_G = """<b>#NewGroupDetected 👥</b>
+    
+<b>🏷 Name:</b> {}
+<b>🆔 ID:</b> <code>{}</code>
+<b>🔢 Members:</b> <code>{}</code>
+<b>👤 Added By:</b> {}"""
+
+    LOG_TEXT_P = """<b>#NewUserDetected 👤</b>
+    
+<b>🆔 ID:</b> <code>{}</code>
+<b>🏷 Name:</b> {}"""
+
+    RESULT_TXT = """<blockquote><b>⚡ Found something for you!</b></blockquote>
+<i>Check the results below:</i>"""
+
+    CUSTOM_FILE_CAPTION = """<b>📂 File: {file_name}</b>
+<b>💾 Size: {file_size}</b>
+
+━━━━━━━━━━━━━━━━━━━━
+<b>📢 Join Our Channels:</b>
+🔥 [Anime Channel](https://t.me/Anime_single)
+🤖 [Tech Channel](https://t.me/tamiltechgkofficial)
+━━━━━━━━━━━━━━━━━━━━
+
+<b>⚠️ COPYRIGHT WARNING ⚠️</b>
+<blockquote>This message will <b>AUTO-DELETE</b> in <b>1 Minute</b> to prevent copyright strikes! ⏳
+<b>Please forward or save this file immediately!</b></blockquote>"""
+
+    RESTART_GC_TXT = """<b>♻️ System Restarted!</b>
+
+<b>📅 Date:</b> <code>{}</code>
+<b>⏰ Time:</b> <code>{}</code>
+<b>🌐 Zone:</b> <code>Asia/Kolkata</code>
+<b>🛠️ Version:</b> <code>v2.0 [Stable]</code>"""
+
+    SPOLL_NOT_FND = """<b>❌ No Results Found</b>
+
+<i>I couldn't find what you are looking for.</i> ☹️
+
+<b>💡 Search Tips:</b>
+1️⃣ Check your spelling.
+2️⃣ Use format: <code>[Movie Name] [Year]</code>
+3️⃣ Don't ask for unreleased movies.
+
+<i>If you think this is an error, report to Admin using /bugs.</i>"""
+
+    # SPELL CHECK LANGUAGES
+    ENG_SPELL = """<b>💡 Spelling Check (English)</b>
+    
+1️⃣ Use correct spelling.
+2️⃣ Check if the movie is released on OTT.
+3️⃣ Try: <code>Movie Name Year</code>"""
+
+    MAL_SPELL = """<b>💡 അക്ഷരത്തെറ്റ് പരിശോധന (Malayalam)</b>
+    
+1️⃣ ശരിയായ സ്പെല്ലിംഗ് ഉപയോഗിക്കുക.
+2️⃣ OTT-യിൽ റിലീസ് ചെയ്തിട്ടുണ്ടോ എന്ന് പരിശോധിക്കുക.
+3️⃣ ശ്രമിക്കുക: <code>Movie Name Year</code>"""
+
+    HIN_SPELL = """<b>💡 वर्तनी जाँच (Hindi)</b>
+    
+1️⃣ सही वर्तनी का प्रयोग करें।
+2️⃣ जांचें कि क्या फिल्म ओटीटी पर रिलीज हुई है।
+3️⃣ प्रयास करें: <code>Movie Name Year</code>"""
+
+    TAM_SPELL = """<b>💡 எழுத்துப்பிழை சரிபார்ப்பு (Tamil)</b>
+    
+1️⃣ சரியான எழுத்துப்பிழையை பயன்படுத்தவும்.
+2️⃣ படம் OTT இல் வெளியாகிவிட்டதா என சரிபார்க்கவும்.
+3️⃣ முயற்சிக்கவும்: <code>Movie Name Year</code>"""
+
+    CHK_MOV_ALRT = """<b>♻️ Checking Database... Please Wait! ♻️</b>"""
+
+    OLD_MES = """<b>⚠️ Request Expired!</b>
+    
+<i>You are clicking an old message. Please request the file again.</i> 🔄"""
+
+    MOV_NT_FND = """<b>❌ Movie Not Found!</b>
+
+<i>This movie is not yet released or not added to my database.</i>
+
+<pre>Use /bugs to request this movie.</pre>"""
+
+    RESTART_TXT = """<b>✅ Bot Restarted Successfully!</b>"""
