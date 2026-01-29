@@ -26,7 +26,7 @@ Please <b>Don't Spam</b> commands, or I might crash (die) 😵.
 
     ABOUT_TXT = """<b>✯ 𝙼𝚈 𝙿𝚁𝙾𝙵𝙸𝙻𝙴 ✯</b>
 
-<b>🤖 𝐍𝐚𝐦𝐞: Auto Filter Bot</b>
+<b>🤖 𝐍𝐚𝐦𝐞: {}</b>
 <b>👑 𝐂𝐫𝐞𝐚𝐭𝐨𝐫: <a href="https://t.me/Goku_Stark">Goku Stark</a></b>
 <b>💻 𝐋𝐚𝐧𝐠𝐮𝐚𝐠𝐞: Python 3</b>
 <b>💾 𝐃𝐚𝐭𝐚𝐛𝐚𝐬𝐞: MongoDB</b>
@@ -39,7 +39,7 @@ Please <b>Don't Spam</b> commands, or I might crash (die) 😵.
 <b>👨‍💻 Developer:</b> <a href="https://t.me/Goku_Stark">Goku Stark</a>
 <b>📂 Repository:</b> <a href="https://t.me/Goku_Stark">Click Here</a>"""
 
-    MANUELFILTER_TXT = """<b>🛠️ Manual Filters Help</b>
+    MANUALFILTER_TXT = """<b>🛠️ Manual Filters Help</b>
 
 <i>Filters allow the bot to reply automatically when a specific keyword is detected.</i>
 
