@@ -191,16 +191,26 @@ async def start(client, message):
             InlineKeyboardButton('💎 Premium Plans', callback_data='see_plans')
          ]]
         reply_markup = InlineKeyboardMarkup(buttons)
-        m=await message.reply_text("⚡️ Welcome to My Bot... BY TAMIL TECH GK") 
-        await asyncio.sleep(1.2)
-        await m.delete()
-        await message.reply_photo(
-            photo=random.choice(PICS),
-            caption=script.START_TXT.format(message.from_user.mention, temp.U_NAME, temp.B_NAME),
-            reply_markup=reply_markup,
-            parse_mode=enums.ParseMode.HTML
-        )
-        return
+        # 1. Naruto Style Loading Effect
+m = await message.reply_text(
+    text="<b>🌀 𝐆𝐚𝐭𝐡𝐞𝐫𝐢𝐧𝐠 𝐂𝐡𝐚𝐤𝐫𝐚... ⏳</b>",
+    parse_mode=enums.ParseMode.HTML
+)
+
+# 2. Wait for 1.5 seconds (Animation feel kidaikum)
+await asyncio.sleep(1.5)
+
+# 3. Loading text delete pannidunga
+await m.delete()
+
+# 4. Main Bot Entry with Photo
+await message.reply_photo(
+    photo=random.choice(PICS),
+    caption=script.START_TXT.format(message.from_user.mention, temp.U_NAME, temp.B_NAME),
+    reply_markup=reply_markup,
+    parse_mode=enums.ParseMode.HTML
+)
+return
 
     if not await is_subscribed(message.from_user.id, client):
         links = await create_invite_links(client)
