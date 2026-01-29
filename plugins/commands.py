@@ -216,7 +216,6 @@ await message.reply_photo(
     parse_mode=enums.ParseMode.HTML
 )
 return
-
     if not await is_subscribed(message.from_user.id, client):
         links = await create_invite_links(client)
         btn = [[InlineKeyboardButton("🤖 Join Updates Channel", url=url)] for url in links.values()]
