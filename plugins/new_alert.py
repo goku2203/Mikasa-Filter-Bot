@@ -2,13 +2,18 @@ import re
 import time
 import logging
 from pyrogram import Client, filters
-from info import CHANNELS
+from info import CHANNELS 
 
 # 👇 LOGS SETUP
 logger = logging.getLogger(__name__)
 
-# ⚠️ Unga Channel ID Inga Podunga
+# ⚠️ Unga Log Channel ID (Inga Alert Message Pogum)
 LOG_CHANNEL_ID = -1003602676231 
+
+# 👇👇 MUKKIYAMANA CHANGE 👇👇
+# Inga ungaloda MOVIE DATABASE CHANNEL ID mattum podunga.
+# Anime Channel ID-a inga poda koodathu!
+ALERT_ALLOWED_CHANNEL = -1003602676231  # <--- Inga ID maathunga
 
 # DUPLICATE CHECK MEMORY
 LAST_SENT = {} 
@@ -17,12 +22,10 @@ def get_name_with_year(name):
     if not name: return "Unknown File"
     clean = name.lower()
     
-    # 1. UNIVERSAL GOKU STARK REMOVER 🛠️
-    # Ithu '@Goku Stark', 'Goku_Stark', '[Goku Stark]' ellathayum remove pannum
+    # 1. UNIVERSAL GOKU STARK REMOVER
     clean = re.sub(r'(?i)(?:\[|\(|@)?\s*goku[\s._-]*stark\s*(?:\]|\))?', '', clean)
     
-    # 2. Remove Junk Characters at Start (Like - or ] or space)
-    # "Goku Stark" remove panna apuram munaadi "- " ninna athayum thookidum
+    # 2. Remove Junk Start
     clean = re.sub(r'^[\s\-_\[\]\(\)\.]+', '', clean)
 
     # 3. YEAR LOGIC
@@ -44,7 +47,8 @@ def get_name_with_year(name):
     
     return clean.title()
 
-@Client.on_message(filters.chat(CHANNELS) & (filters.document | filters.video | filters.audio), group=10)
+# 👇 CHANGE 2: 'filters.chat(CHANNELS)' ku pathila 'filters.chat(ALERT_ALLOWED_CHANNEL)'
+@Client.on_message(filters.chat(ALERT_ALLOWED_CHANNEL) & (filters.document | filters.video | filters.audio), group=10)
 async def alert_handler(client, message):
     try:
         media = getattr(message, message.media.value)
@@ -53,7 +57,6 @@ async def alert_handler(client, message):
         # Clean Name Edukkurom
         clean_name = get_name_with_year(filename)
         
-        # Check if name became empty after cleaning
         if not clean_name:
             clean_name = "Unknown Movie"
 
