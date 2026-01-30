@@ -205,7 +205,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
                 InlineKeyboardButton("📸 Send Screenshot", url=admin_link)
             ],
             [
-                InlineKeyboardButton("✖ Close", callback_data="close_data")
+                InlineKeyboardButton("🏠 Home", callback_data="start_data")
             ]
         ]
         
@@ -517,8 +517,8 @@ async def cb_handler(client: Client, query: CallbackQuery):
                 InlineKeyboardButton("🧩 ᴇxᴛʀᴀs", callback_data="extras")
             ],
             [
-                InlineKeyboardButton("🏠 ʜᴏᴍᴇ", callback_data="start_data"),
-                InlineKeyboardButton("🔙 ʀᴇᴛᴜʀɴ", callback_data="start_data")
+                InlineKeyboardButton("🔙 ʀᴇᴛᴜʀɴ", callback_data="start_data"),
+                InlineKeyboardButton("💎 ᴘʀᴇᴍɪᴜᴍ", callback_data="premium_data")
             ],
             [
                 InlineKeyboardButton("⚡ ᴄᴏɴᴛᴀᴄᴛ ᴀᴅᴍɪɴ ⚡", url="https://t.me/Tamilmovieslink_bot")
