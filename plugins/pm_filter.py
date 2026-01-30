@@ -635,18 +635,37 @@ async def cb_handler(client: Client, query: CallbackQuery):
             parse_mode=enums.ParseMode.HTML
         )
 
-    elif query.data == "admin":
+elif query.data == "admin":
+        # 1. Database la irunthu count edukkurom
+        total_users = await db.total_users_count()
+        total_chats = await db.total_chat_count()
+        
+        # 2. Files Count edukkurom (Optional - Venum na vechukalam)
+        total_files = await Media.count_documents()
+
+        # 3. Text-a Format Panrom (Pazhaya text kooda Stats add panrom)
+        stats_text = (
+            f"\n\n<b>📊 𝐋𝐈𝐕𝐄 𝐒𝐓𝐀𝐓𝐒 📊</b>\n"
+            f"<b>👤 Users:</b> {total_users}\n"
+            f"<b>👥 Groups:</b> {total_chats}\n"
+            f"<b>📂 Files:</b> {total_files}"
+        )
+        
+        # Script la irukka Admin Text + Namma Stats Text
+        final_text = script.ADMIN_TXT + stats_text
+
         buttons = [[
             InlineKeyboardButton('ʙᴀᴄᴋ', callback_data='help'),
             InlineKeyboardButton('⚡ Contact Admin', url='https://t.me/Tamilmovieslink_bot')
         ]]
+        
         reply_markup = InlineKeyboardMarkup(buttons)
+        
         await query.message.edit_text(
-            text=script.ADMIN_TXT,
+            text=final_text,
             reply_markup=reply_markup,
             parse_mode=enums.ParseMode.HTML
         )
-
     elif query.data == "stats":
         buttons = [[
             InlineKeyboardButton('ʙᴀᴄᴋ', callback_data='help'),
