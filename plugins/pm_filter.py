@@ -24,6 +24,8 @@ from database.filters_mdb import (
     get_filters,
 )
 import logging
+import random
+from info import PICS
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.ERROR)
@@ -499,10 +501,22 @@ async def cb_handler(client: Client, query: CallbackQuery):
         
         reply_markup = InlineKeyboardMarkup(buttons)
         
-        await query.message.edit_text(
-            text=script.START_TXT.format(query.from_user.mention, temp.U_NAME, temp.B_NAME),
-            reply_markup=reply_markup,
-            parse_mode=enums.ParseMode.HTML
+# 👇 TEXT FORMATTING (Safe Method)
+        try:
+            # Script la 3 bracket {} iruntha ithu work aagum
+            txt = script.START_TXT.format(query.from_user.mention, temp.U_NAME, temp.B_NAME)
+        except:
+            # Script la 1 bracket {} iruntha ithu work aagum
+            txt = script.START_TXT.format(query.from_user.mention)
+
+        # 👇 EDIT MEDIA (Ithu thaan mukkiyam)
+        # Ithu Premium image-a eduthutu, Random Start Photo-va vaikum
+        await query.message.edit_media(
+            media=InputMediaPhoto(
+                media=random.choice(PICS), # Random Photo Select aagum
+                caption=txt
+            ),
+            reply_markup=reply_markup
         )
         await query.answer('@Goku_Stark')
 
