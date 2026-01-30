@@ -786,36 +786,30 @@ async def auto_filter(client, msg, spoll=False):
                 f"<i>Here is your result 👇</i>"
             )
             # 👆 ANIMATION END 👆
-
+            
             files, offset, total_results = await get_search_results(search.lower(), offset=0, filter=True)
             
             if not files:
-                await search_msg.delete() # Result illana animation msg delete
+                # 👇 RESULTS ILLANA ENNA PANNANUM? 👇
                 
-                # 👇 AUTO REQUEST LOGIC START 👇
-                try:
-                    # Inga unga Channel ID podunga (-100 kandippa irukkanum)
-                    REQ_CHANNEL_ID = -1003555146843 
-                    
-                    if len(search) > 3:
-                        req_msg = (
-                            f"<b>⚠️ Missing Movie Detected!</b>\n\n"
-                            f"<b>🔍 Query:</b> <code>{search}</code>\n"
-                            f"<b>👤 User:</b> {message.from_user.mention}\n"
-                            f"<b>📂 Group:</b> {message.chat.title}\n\n"
-                            f"<i>Please upload this movie soon!</i>"
-                        )
-                        await client.send_message(REQ_CHANNEL_ID, req_msg)
-                except Exception as e:
-                    print(f"Auto Request Error: {e}")
-                # 👆 AUTO REQUEST LOGIC END 👆
-
+                # 1. Spell Check ON la iruntha -> Google la thedu
                 if settings["spell_check"]:
+                    await search_msg.edit(f"<b>❌ Not Found in DB...</b>\n<i>Checking Google for Spelling... 🌏</i>")
                     return await advantage_spell_chok(client, msg)
+                
+                # 2. Spell Check OFF la iruntha -> "No Results" nu sollu
                 else:
+                    await search_msg.edit(
+                        f"<b>❌ No Results Found!</b>\n\n"
+                        f"<i>Couldn't find '<b>{search}</b>' in my database.</i>\n"
+                        f"Please check the spelling or Request to Admin."
+                    )
+                    await asyncio.sleep(10)
+                    await search_msg.delete()
                     return
-        else:
-            return
+            else:
+                # Result kedaichiruchu, Loading msg delete pannidalam
+                await search_msg.delete() 
     else:
         settings = await get_settings(msg.message.chat.id)
         message = msg.message.reply_to_message  # msg is CallbackQuery
@@ -876,7 +870,7 @@ async def auto_filter(client, msg, spoll=False):
         else:
             btn.append([InlineKeyboardButton(text="📃 1/1", callback_data="pages")])
             
-    # 👇 REQUEST BUTTON (Add Panniachu) 👇
+    # 👇 REQUEST BUTTON
     btn.append([InlineKeyboardButton("📝 Request Movie 📝", url="https://t.me/Tamilmovieslink_bot")])
     
     imdb = await get_poster(search, file=(files[0]).file_name) if settings["imdb"] else None
@@ -919,8 +913,7 @@ async def auto_filter(client, msg, spoll=False):
 
     if imdb and imdb.get('poster'):
         try:
-            # Result vantha udane Animation msg delete aaganum
-            if not spoll: await search_msg.delete() # 👈 Animation Delete Logic
+            if not spoll: await search_msg.delete()
             
             delauto = await message.reply_photo(
                 photo=imdb.get('poster'),
@@ -947,7 +940,7 @@ async def auto_filter(client, msg, spoll=False):
             await asyncio.sleep(60)
             await audel.delete()
     else:
-        if not spoll: await search_msg.delete() # 👈 Animation Delete Logic
+        if not spoll: await search_msg.delete()
         
         if HYPER_MODE:
             autodel = await message.reply_text(
