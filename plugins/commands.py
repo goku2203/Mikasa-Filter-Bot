@@ -799,7 +799,7 @@ async def premium_plans(client, message):
                 InlineKeyboardButton("📸 Send Screenshot", url=admin_link)
             ],
             [
-                InlineKeyboardButton("✖ Close", callback_data="close_data")
+                InlineKeyboardButton("🏠 Home", callback_data="start_data")
             ]
         ]
 
