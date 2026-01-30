@@ -795,6 +795,8 @@ async def auto_filter(client, msg, spoll=False):
                 # 1. Spell Check ON la iruntha -> Google la thedu
                 if settings["spell_check"]:
                     await search_msg.edit(f"<b>❌ Not Found in DB...</b>\n<i>Checking Google for Spelling... 🌏</i>")
+                    await asyncio.sleep(0.5) # 0.5 Seconds wait pannum ⏳
+                    await search_msg.delete() # Udane Delete aagidum 🗑️
                     return await advantage_spell_chok(client, msg)
                 
                 # 2. Spell Check OFF la iruntha -> "No Results" nu sollu
@@ -958,61 +960,68 @@ async def auto_filter(client, msg, spoll=False):
     if spoll:
         await msg.message.delete()
 
-#SPELL CHECK RE EDITED BY GOUTHAMSER
+# SPELL CHECK LOGIC (IMPROVED VERSION)
 async def advantage_spell_chok(client, msg):
     mv_id = msg.id
     mv_rqst = msg.text
     reqstr1 = msg.from_user.id if msg.from_user else 0
     reqstr = await client.get_users(reqstr1)
     settings = await get_settings(msg.chat.id)
+    
+    # 1. Junk Words Remove Panrom (Simple & Powerful)
     query = re.sub(
         r"\b(pl(i|e)*?(s|z+|ease|se|ese|(e+)s(e)?)|((send|snd|giv(e)?|gib)(\sme)?)|movie(s)?|new|latest|br((o|u)h?)*|^h(e|a)?(l)*(o)*|mal(ayalam)?|t(h)?amil|file|that|find|und(o)*|kit(t(i|y)?)?o(w)?|thar(u)?(o)*w?|kittum(o)*|aya(k)*(um(o)*)?|full\smovie|any(one)|with\ssubtitle(s)?)",
-        "", msg.text, flags=re.IGNORECASE)  # plis contribute some common words
-    query = query.strip() + " movie"
+        "", msg.text, flags=re.IGNORECASE)
+    
+    query = query.strip()
+    
+    # "Master" nu vantha "Master movie" nu Google la theda solrom
+    if query:
+        search_query = query + " movie"
+    else:
+        search_query = msg.text # Onnum illana full text thedu
+
     try:
-        movies = await get_poster(mv_rqst, bulk=True)
+        # 2. IMDb / Google la Poster Thedurom
+        movies = await get_poster(search_query, bulk=True)
     except Exception as e:
         logger.exception(e)
-        reqst_gle = mv_rqst.replace(" ", "+")
-        button = [[
-                 InlineKeyboardButton('ENG', 'esp'),
-                 InlineKeyboardButton('MAL', 'msp'),
-                 InlineKeyboardButton('HIN', 'hsp'),
-                 InlineKeyboardButton('TAM', 'tsp')
-        ],[
-                 InlineKeyboardButton('🔍 ɢᴏᴏɢʟᴇ 🔎', url=f"https://www.google.com/search?q={reqst_gle}")
-             ]]
-        
-        k = await msg.reply_text(
-            text=script.SPOLL_NOT_FND, #IN SCRIPT CHANGE DONOT CHANGE CODE
-            reply_markup=InlineKeyboardMarkup(button),
-            reply_to_message_id=msg.id
-        )
-        await asyncio.sleep(60)
-        await k.delete()      
-        return
-    movielist = []
+        movies = None
+
+    # 3. Google Button Link Create Panrom
+    reqst_gle = mv_rqst.replace(" ", "+")
+    google_btn = [
+        [
+            InlineKeyboardButton('ENG', 'esp'),
+            InlineKeyboardButton('MAL', 'msp'),
+            InlineKeyboardButton('HIN', 'hsp'),
+            InlineKeyboardButton('TAM', 'tsp')
+        ],
+        [
+            InlineKeyboardButton('🔍 Check on Google 🔎', url=f"https://www.google.com/search?q={reqst_gle}")
+        ]
+    ]
+
+    # 4. Result Check
     if not movies:
-        reqst_gle = mv_rqst.replace(" ", "+")
-        button = [[
-                 InlineKeyboardButton('ENG', 'esp'),
-                 InlineKeyboardButton('MAL', 'msp'),
-                 InlineKeyboardButton('HIN', 'hsp'),
-                 InlineKeyboardButton('TAM', 'tsp')
-        ],[
-                 InlineKeyboardButton('🔍 ɢᴏᴏɢʟᴇ 🔎', url=f"https://www.google.com/search?q={reqst_gle}")
-             ]]
-        
+        # Result Illana "No Results" nu solli Google link tharom
         k = await msg.reply_text(
             text=script.SPOLL_NOT_FND, 
-            reply_markup=InlineKeyboardMarkup(button),
+            reply_markup=InlineKeyboardMarkup(google_btn),
             reply_to_message_id=msg.id
         )
         await asyncio.sleep(60)
         await k.delete()
         return
+
+    # 5. Result Iruntha List Panrom (Did you mean...)
     movielist = [movie.get('title') for movie in movies]
+    
+    # Duplicate remove panrom (Sila samayam ore padam 2 vaati varum)
+    movielist = list(dict.fromkeys(movielist)) 
+
     SPELL_CHECK[mv_id] = movielist
+    
     btn = [
         [
             InlineKeyboardButton(
@@ -1022,16 +1031,17 @@ async def advantage_spell_chok(client, msg):
         ]
         for k, movie_name in enumerate(movielist)
     ]
-    btn.append([InlineKeyboardButton(text="✘ ᴄʟᴏsᴇ ✘", callback_data=f'spol#{reqstr1}#close_spellcheck')])
+    
+    btn.append([InlineKeyboardButton(text="✖ Close", callback_data=f'spol#{reqstr1}#close_spellcheck')])
+    
     spell_check_del = await msg.reply_text(
-        text="<b>Sᴘᴇʟʟɪɴɢ Mɪꜱᴛᴀᴋᴇ Bʀᴏ ‼️\n\nᴅᴏɴ'ᴛ ᴡᴏʀʀʏ 😊 Cʜᴏᴏꜱᴇ ᴛʜᴇ ᴄᴏʀʀᴇᴄᴛ ᴏɴᴇ ʙᴇʟᴏᴡ 👇</b>",
+        text=f"<b>❌ Couldn't find '<code>{mv_rqst}</code>'\n\nDid you mean any of these? 👇</b>",
         reply_markup=InlineKeyboardMarkup(btn),
         reply_to_message_id=msg.id
     )
+    
     await asyncio.sleep(180)
     await spell_check_del.delete()
-
-
 
 async def manual_filters(client, message, text=False):
     group_id = message.chat.id
