@@ -960,7 +960,8 @@ async def auto_filter(client, msg, spoll=False):
     if spoll:
         await msg.message.delete()
 
-# SPELL CHECK LOGIC (IMPROVED VERSION)
+# 👇 REPLACED SPELL CHECK LOGIC (Database Fuzzy Search Added) 👇
+
 async def advantage_spell_chok(client, msg):
     mv_id = msg.id
     mv_rqst = msg.text
@@ -968,43 +969,63 @@ async def advantage_spell_chok(client, msg):
     reqstr = await client.get_users(reqstr1)
     settings = await get_settings(msg.chat.id)
     
-    # 1. Junk Words Remove Panrom (Simple & Powerful)
+    # 1. Clean the Query (Junk Remove)
     query = re.sub(
         r"\b(pl(i|e)*?(s|z+|ease|se|ese|(e+)s(e)?)|((send|snd|giv(e)?|gib)(\sme)?)|movie(s)?|new|latest|br((o|u)h?)*|^h(e|a)?(l)*(o)*|mal(ayalam)?|t(h)?amil|file|that|find|und(o)*|kit(t(i|y)?)?o(w)?|thar(u)?(o)*w?|kittum(o)*|aya(k)*(um(o)*)?|full\smovie|any(one)|with\ssubtitle(s)?)",
         "", msg.text, flags=re.IGNORECASE)
     
     query = query.strip()
     
-    # "Master" nu vantha "Master movie" nu Google la theda solrom
+    # IMDb ku "Master movie" nu anuppurom
     if query:
         search_query = query + " movie"
     else:
-        search_query = msg.text # Onnum illana full text thedu
+        search_query = msg.text
 
     try:
-        # 2. IMDb / Google la Poster Thedurom
+        # 2. Try External Search (IMDb/Google)
         movies = await get_poster(search_query, bulk=True)
     except Exception as e:
         logger.exception(e)
         movies = None
 
-    # 3. Google Button Link Create Panrom
-    reqst_gle = mv_rqst.replace(" ", "+")
-    google_btn = [
-        [
-            InlineKeyboardButton('ENG', 'esp'),
-            InlineKeyboardButton('MAL', 'msp'),
-            InlineKeyboardButton('HIN', 'hsp'),
-            InlineKeyboardButton('TAM', 'tsp')
-        ],
-        [
-            InlineKeyboardButton('🔍 Check on Google 🔎', url=f"https://www.google.com/search?q={reqst_gle}")
-        ]
-    ]
+    movielist = []
+    
+    # 3. External Result iruntha eduthuko
+    if movies:
+        movielist += [movie.get('title') for movie in movies]
 
-    # 4. Result Check
-    if not movies:
-        # Result Illana "No Results" nu solli Google link tharom
+    # 👇👇 NEW MAGIC: DATABASE FUZZY SEARCH 👇👇
+    # IMDb fail aanalum, namma DB la irunthu kandupudipom!
+    
+    if not movielist:
+        try:
+            # "mester" -> First letter "m"
+            first_char = query[0] if query else ""
+            
+            if first_char:
+                # DB la "m" la start aagura files mattum edu (Limit 100 for Speed)
+                cursor = Media.collection.find({"file_name": {"$regex": f"^{first_char}", "$options": "i"}}).limit(100)
+                db_files = await cursor.to_list(length=100)
+                
+                # File names mattum thaniya edu
+                db_names = [x['file_name'] for x in db_files]
+                
+                # Fuzzy Match (Mester vs Master)
+                if db_names:
+                    # Top 5 matches edu
+                    matches = process.extract(query, db_names, limit=5)
+                    # Score 50 ku mela iruntha list la seru
+                    movielist += [m[0] for m in matches if m[1] > 50]
+        except Exception as e:
+            logger.error(f"Fuzzy Error: {e}")
+
+    # 4. Final Result Check
+    if not movielist:
+        reqst_gle = mv_rqst.replace(" ", "+")
+        google_btn = [
+            [InlineKeyboardButton('🔍 Check on Google 🔎', url=f"https://www.google.com/search?q={reqst_gle}")]
+        ]
         k = await msg.reply_text(
             text=script.SPOLL_NOT_FND, 
             reply_markup=InlineKeyboardMarkup(google_btn),
@@ -1014,12 +1035,9 @@ async def advantage_spell_chok(client, msg):
         await k.delete()
         return
 
-    # 5. Result Iruntha List Panrom (Did you mean...)
-    movielist = [movie.get('title') for movie in movies]
+    # 5. Duplicate Remove & Display Buttons
+    movielist = list(dict.fromkeys(movielist)) # Duplicates ali
     
-    # Duplicate remove panrom (Sila samayam ore padam 2 vaati varum)
-    movielist = list(dict.fromkeys(movielist)) 
-
     SPELL_CHECK[mv_id] = movielist
     
     btn = [
