@@ -8,7 +8,7 @@ from info import CHANNELS
 logger = logging.getLogger(__name__)
 
 # ⚠️ Unga Log Channel ID (Inga Alert Message Pogum)
-LOG_CHANNEL_ID = -1003602676231 
+LOG_CHANNEL_ID = 
 
 # 👇👇 MUKKIYAMANA CHANGE 👇👇
 # Inga ungaloda MOVIE DATABASE CHANNEL ID mattum podunga.
