@@ -60,14 +60,18 @@ async def alert_handler(client, message):
         if not clean_name:
             clean_name = "Unknown Movie"
 
-        # --- DUPLICATE FILTER LOGIC ---
+        # --- IMPROVED DUPLICATE FILTER LOGIC ---
         current_time = time.time()
         
         if clean_name in LAST_SENT:
             last_time = LAST_SENT[clean_name]
-            # 5 Minutes Time Gap
+            # 5 Minutes (300 seconds) gap
             if current_time - last_time < 300:
                 return
+
+        # 🔥 MUKKIYAM: Message send panrathuku munnadiye time-ah lock pannidunga
+        # Ithu simultaneous-ah vara matha files-ah stop pannidum
+        LAST_SENT[clean_name] = current_time
 
         # Output Text
         text = f"<b>{clean_name} Added ✅</b>"
@@ -77,7 +81,8 @@ async def alert_handler(client, message):
             text=text
         )
         
-        LAST_SENT[clean_name] = current_time
-        
     except Exception as e:
         logger.error(f"❌ Alert Error: {e}")
+        # Error vantha dictionary-la irunthu remove panni logic-ah reset pannalam (optional)
+        if clean_name in LAST_SENT:
+            del LAST_SENT[clean_name]
