@@ -634,8 +634,8 @@ async def cb_handler(client: Client, query: CallbackQuery):
             reply_markup=reply_markup,
             parse_mode=enums.ParseMode.HTML
         )
-
-elif query.data == "admin":
+    
+    elif query.data == "admin":
         # 1. Database la irunthu count edukkurom
         total_users = await db.total_users_count()
         total_chats = await db.total_chat_count()
