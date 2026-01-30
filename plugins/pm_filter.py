@@ -26,6 +26,7 @@ from database.filters_mdb import (
 import logging
 import random
 from info import PICS
+import difflib # Itha Function kulla use panrom
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.ERROR)
@@ -960,7 +961,7 @@ async def auto_filter(client, msg, spoll=False):
     if spoll:
         await msg.message.delete()
 
-# 👇 REPLACED SPELL CHECK LOGIC (Database Fuzzy Search Added) 👇
+# 👇 REPLACED SPELL CHECK LOGIC (Using Built-in Difflib) 👇
 
 async def advantage_spell_chok(client, msg):
     mv_id = msg.id
@@ -976,7 +977,7 @@ async def advantage_spell_chok(client, msg):
     
     query = query.strip()
     
-    # IMDb ku "Master movie" nu anuppurom
+    # IMDb/Google Search Query
     if query:
         search_query = query + " movie"
     else:
@@ -995,7 +996,7 @@ async def advantage_spell_chok(client, msg):
     if movies:
         movielist += [movie.get('title') for movie in movies]
 
-    # 👇👇 NEW MAGIC: DATABASE FUZZY SEARCH 👇👇
+    # 👇👇 NEW MAGIC: DATABASE MATCHING (Built-in) 👇👇
     # IMDb fail aanalum, namma DB la irunthu kandupudipom!
     
     if not movielist:
@@ -1004,19 +1005,18 @@ async def advantage_spell_chok(client, msg):
             first_char = query[0] if query else ""
             
             if first_char:
-                # DB la "m" la start aagura files mattum edu (Limit 100 for Speed)
-                cursor = Media.collection.find({"file_name": {"$regex": f"^{first_char}", "$options": "i"}}).limit(100)
-                db_files = await cursor.to_list(length=100)
+                # DB la "m" la start aagura files mattum edu (Limit 200 for Better Search)
+                cursor = Media.collection.find({"file_name": {"$regex": f"^{first_char}", "$options": "i"}}).limit(200)
+                db_files = await cursor.to_list(length=200)
                 
                 # File names mattum thaniya edu
                 db_names = [x['file_name'] for x in db_files]
                 
-                # Fuzzy Match (Mester vs Master)
+                # Use Python's Difflib (Mester vs Master)
                 if db_names:
-                    # Top 5 matches edu
-                    matches = process.extract(query, db_names, limit=5)
-                    # Score 50 ku mela iruntha list la seru
-                    movielist += [m[0] for m in matches if m[1] > 50]
+                    # Cutoff 0.6 means 60% match iruntha pothum
+                    matches = difflib.get_close_matches(query, db_names, n=5, cutoff=0.5)
+                    movielist += matches
         except Exception as e:
             logger.error(f"Fuzzy Error: {e}")
 
