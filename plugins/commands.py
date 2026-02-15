@@ -312,7 +312,7 @@ async def start(client, message):
 
             buttons = [
                 [InlineKeyboardButton("Click Here To Verify 🟢", url=verify_url)],
-                [InlineKeyboardButton("How to Download 📥", url="https://t.me/howtoo1/3")]
+                [InlineKeyboardButton("How to Download 📥", url="https://t.me/howtoo1/7")]
             ]
             verify_msg = await message.reply_text(
                 text=f"<b>⚠️ நீங்க இன்னும் Verify பண்ணல!</b>\n\n<b>📂 File: {file_name}</b>\n<b>💾 Size: {file_size}</b>\n\n<i>கீழே உள்ள பட்டனை கிளிக் செய்து Verify பண்ணுங்க.</i>\n\n<b>⏳ Time Limit: 1 Hours!</b>",
