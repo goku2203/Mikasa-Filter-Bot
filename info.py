@@ -82,8 +82,8 @@ LOG_STR += (f"MAX_LIST_ELM Found, long list will be shortened to first {MAX_LIST
 LOG_STR += f"Your current IMDB template is {IMDB_TEMPLATE}"
 
 # Render la irunthu value edukka
-SHORTLINK_URL = os.environ.get("SHORTLINK_URL", "gplinks.com")
-SHORTLINK_API = os.environ.get("SHORTLINK_API", "a38389c4c79061c213924ba5b512e3909175e0ca")
+SHORTLINK_URL = os.environ.get("SHORTLINK_URL", "arolinks.com")
+SHORTLINK_API = os.environ.get("SHORTLINK_API", "9142b3e52913166ef75d3b8ad05bc2e8460e9e3b")
 IS_VERIFY = os.environ.get("IS_VERIFY", "True")
 
 # ... vera variables irukkum ...
