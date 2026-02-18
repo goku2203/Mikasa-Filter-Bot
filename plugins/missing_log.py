@@ -1,36 +1,46 @@
+import time
 import asyncio
-from pyrogram import Client, filters, enums
+from pyrogram import Client, filters
 from database.ia_filterdb import get_search_results
 from info import LOG_CHANNEL
 
-# Idhu Group-la vara message-a check pannum
+# --- SETTINGS ---
+LOG_COOLDOWN = 600  # 600 Seconds = 10 Minutes (Idha neenga mathikalam)
+RECENT_REQUESTS = {}  # Inga than request save aagum
+
 @Client.on_message(filters.group & filters.text & filters.incoming)
 async def missing_movie_monitor(client, message):
-    # Commands (Example: /start, /help) vandha ignore pannidum
-    if message.text.startswith("/") or message.text.startswith("#"):
+    # 1. Basic Filters
+    if message.text.startswith(("/", "#")):
         return
     
     query = message.text.strip()
-    
-    # Chinnatha irukkura words-a ignore pannalam (Optional)
     if len(query) < 3:
         return
 
+    # 2. Check DUPLICATE (Spam Control)
+    clean_query = query.lower() # Ellame chinna eluthu aakiduvom
+    current_time = time.time()
+
+    if clean_query in RECENT_REQUESTS:
+        last_time = RECENT_REQUESTS[clean_query]
+        # Time mudiyura varaikum wait pannum
+        if (current_time - last_time) < LOG_COOLDOWN:
+            return  # 10 nimisham aagala, so Log anuppa vendam. Stop here.
+
     try:
-        # Database la movie irukka nu check panrom
-        # Note: get_search_results unga bot DB function
+        # 3. Database Check
         results = await get_search_results(query)
-        
-        # Sila bots la (files, offset, total) nu return aagum.
-        # So, adhai correct aana format la edukkurom.
         if isinstance(results, tuple):
             files = results[0]
         else:
             files = results
 
-        # Padam illana mattum (If files list is empty)
+        # 4. If Movie MISSING -> Send Log
         if not files:
-            # Log Channel kku message anuppurom
+            # First, update time (Adutha 10 mins ku idhe padam log aagathu)
+            RECENT_REQUESTS[clean_query] = current_time
+            
             log_msg = (
                 f"⚠️ **Missing Movie Detected!**\n\n"
                 f"🔍 **Query:** {query}\n"
@@ -40,7 +50,6 @@ async def missing_movie_monitor(client, message):
                 f"Please upload this movie soon! #Missing_Request"
             )
             
-            # LOG_CHANNEL ID correct-a iruntha send aagum
             if LOG_CHANNEL:
                 await client.send_message(
                     chat_id=LOG_CHANNEL,
@@ -49,5 +58,4 @@ async def missing_movie_monitor(client, message):
                 )
                 
     except Exception as e:
-        # Error vandha summa print pannum, bot stop aagathu
         print(f"Missing Log Error: {e}")
