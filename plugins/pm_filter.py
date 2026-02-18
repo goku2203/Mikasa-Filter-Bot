@@ -28,6 +28,14 @@ import random
 from info import PICS
 import difflib # Itha Function kulla use panrom
 
+# Indha function-a imports ku keela paste pannunga
+async def auto_delete(message, time=60):
+    await asyncio.sleep(time)
+    try:
+        await message.delete()
+    except:
+        pass
+        
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.ERROR)
 
