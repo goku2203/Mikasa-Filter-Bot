@@ -42,8 +42,8 @@ logger.setLevel(logging.ERROR)
 BUTTONS = {}
 SPELL_CHECK = {}
 
-
-@Client.on_message(filters.group | filters.private & filters.text & filters.incoming) 
+# Bracket () romba mukkiyam!
+@Client.on_message((filters.group | filters.private) & filters.text & filters.incoming)
 async def give_filter(client, message):
     try:
         await message.delete()
