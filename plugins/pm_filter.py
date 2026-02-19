@@ -26,7 +26,7 @@ from database.filters_mdb import (
 import logging
 import random
 from info import PICS
-import difflib # Itha Function kulla use panrom
+import difflib
 
 # Indha function-a imports ku keela paste pannunga
 async def auto_delete(message, time=60):
@@ -44,10 +44,12 @@ SPELL_CHECK = {}
 
 @Client.on_message((filters.group | filters.private) & filters.text)
 async def give_filter(client, message):
+    # NOTE: Bot Group la Admin ah illana message delete panna mudiyathu.
+    # Athu error aagama irukka try-except use panrom.
     try:
         await message.delete()
     except Exception as e:
-        logger.exception("Failed to delete message:", e)
+        pass # Admin illana paravalla, leave it.
 
     k = await manual_filters(client, message)
     if k == False:
@@ -78,7 +80,10 @@ async def next_page(bot, query):
     if not files:
         return
 
+    # FIX: Group Settings illana Crash aagakoodathu
     settings = await get_settings(query.message.chat.id)
+    if not settings:
+        settings = {"button": True, "botpm": False, "file_secure": False, "imdb": False, "spell_check": False, "template": IMDB_TEMPLATE, "welcome": False}
 
     if HYPER_MODE:
         cap_lines = []
@@ -139,9 +144,9 @@ async def next_page(bot, query):
                 InlineKeyboardButton("NEXT ▶️", callback_data=f"next_{req}_{key}_{n_offset}")
             ]
         )
-# 👇 INTHA LINE AH INGA ADD PANNUNGA 👇
+
     btn.append([InlineKeyboardButton("📝 Request Movie 📝", url="https://t.me/Tamilmovieslink_bot")])
-    # 👆 MELA IRUKKURATHA ADD PANNUNGA 👆
+    
     try:
         if HYPER_MODE:
             await query.edit_message_text(
@@ -168,9 +173,9 @@ async def advantage_spoll_choker(bot, query):
         return await query.message.delete()
     movies = SPELL_CHECK.get(query.message.reply_to_message.id)
     if not movies:
-        return await query.answer(script.OLD_MES, show_alert=True)#script change
+        return await query.answer(script.OLD_MES, show_alert=True)
     movie = movies[(int(movie_))]
-    await query.answer(script.CHK_MOV_ALRT)#script change
+    await query.answer(script.CHK_MOV_ALRT)
     k = await manual_filters(bot, query.message, text=movie)
     if k == False:
         files, offset, total_results = await get_search_results(movie, offset=0, filter=True)
@@ -178,17 +183,15 @@ async def advantage_spoll_choker(bot, query):
             k = (movie, files, offset, total_results)
             await auto_filter(bot, query, k)
         else:
-            k = await query.message.edit(script.MOV_NT_FND)#script change
+            k = await query.message.edit(script.MOV_NT_FND)
             await asyncio.sleep(10)
             await k.delete()
 
 @Client.on_callback_query()
 async def cb_handler(client: Client, query: CallbackQuery):
-    # 1. Close Data
     if query.data == "close_data":
         await query.message.delete()
 
-    # 2. Premium Plans
     elif query.data == "premium_data":
         payment_link = "https://upi.pe/gokula8@ibl" 
         admin_link = "https://t.me/Screenshot_gk_bot"
@@ -225,7 +228,6 @@ async def cb_handler(client: Client, query: CallbackQuery):
         )
         return await query.answer()
 
-    # 3. Delete All Confirm
     elif query.data == "delallconfirm":
         userid = query.from_user.id
         chat_type = query.message.chat.type
@@ -404,7 +406,6 @@ async def cb_handler(client: Client, query: CallbackQuery):
             alert = alert.replace("\\n", "\n").replace("\\t", "\t")
             await query.answer(alert, show_alert=True)
 
-    # ERROR FIX: 'if' ah 'elif' ah maathiruken
     elif query.data.startswith("file"):
         ident, file_id = query.data.split("#")
         files_ = await get_file_details(file_id)
@@ -414,7 +415,12 @@ async def cb_handler(client: Client, query: CallbackQuery):
         title = files.file_name
         size = get_size(files.file_size)
         f_caption = files.caption
+        
+        # FIX: Group Settings check
         settings = await get_settings(query.message.chat.id)
+        if not settings:
+             settings = {"button": True, "botpm": False, "file_secure": False, "imdb": False, "spell_check": False, "template": IMDB_TEMPLATE, "welcome": False}
+
         if CUSTOM_FILE_CAPTION:
             try:
                 f_caption = CUSTOM_FILE_CAPTION.format(file_name='' if title is None else title,
@@ -477,7 +483,6 @@ async def cb_handler(client: Client, query: CallbackQuery):
     elif query.data == "pages":
         await query.answer()
 
-    # SPELL CHECK BUTTONS
     elif query.data == "esp":
         await query.answer(text=script.ENG_SPELL, show_alert="true")
     elif query.data == "msp":
@@ -487,7 +492,6 @@ async def cb_handler(client: Client, query: CallbackQuery):
     elif query.data == "tsp":
         await query.answer(text=script.TAM_SPELL, show_alert="true")
         
-    # ERROR FIX: 'start_data' add panniruken (BACK button work aaga)
     elif query.data == "start" or query.data == "start_data":
         buttons = [
             [
@@ -509,19 +513,14 @@ async def cb_handler(client: Client, query: CallbackQuery):
         
         reply_markup = InlineKeyboardMarkup(buttons)
         
-# 👇 TEXT FORMATTING (Safe Method)
         try:
-            # Script la 3 bracket {} iruntha ithu work aagum
             txt = script.START_TXT.format(query.from_user.mention, temp.U_NAME, temp.B_NAME)
         except:
-            # Script la 1 bracket {} iruntha ithu work aagum
             txt = script.START_TXT.format(query.from_user.mention)
 
-        # 👇 EDIT MEDIA (Ithu thaan mukkiyam)
-        # Ithu Premium image-a eduthutu, Random Start Photo-va vaikum
         await query.message.edit_media(
             media=InputMediaPhoto(
-                media=random.choice(PICS), # Random Photo Select aagum
+                media=random.choice(PICS),
                 caption=txt
             ),
             reply_markup=reply_markup
@@ -577,7 +576,6 @@ async def cb_handler(client: Client, query: CallbackQuery):
             parse_mode=enums.ParseMode.HTML
         )
 
-    # ERROR FIX: 'manuelfilter' -> 'manual_filter'
     elif query.data == "manual_filter":
         buttons = [[
             InlineKeyboardButton('ʙᴀᴄᴋ', callback_data='help'),
@@ -603,7 +601,6 @@ async def cb_handler(client: Client, query: CallbackQuery):
             parse_mode=enums.ParseMode.HTML
         )
 
-    # ERROR FIX: 'autofilter' -> 'auto_filter'
     elif query.data == "auto_filter":
         buttons = [[
             InlineKeyboardButton('ʙᴀᴄᴋ', callback_data='help'),
@@ -616,7 +613,6 @@ async def cb_handler(client: Client, query: CallbackQuery):
             parse_mode=enums.ParseMode.HTML
         )
 
-    # ERROR FIX: 'coct' -> 'connection'
     elif query.data == "connection":
         buttons = [[
             InlineKeyboardButton('ʙᴀᴄᴋ', callback_data='help'),
@@ -629,7 +625,6 @@ async def cb_handler(client: Client, query: CallbackQuery):
             parse_mode=enums.ParseMode.HTML
         )
 
-    # ERROR FIX: 'extra' -> 'extras'
     elif query.data == "extras":
         buttons = [[
             InlineKeyboardButton('ʙᴀᴄᴋ', callback_data='help'),
@@ -644,31 +639,23 @@ async def cb_handler(client: Client, query: CallbackQuery):
         )
     
     elif query.data == "admin":
-        # 1. Database la irunthu count edukkurom
         total_users = await db.total_users_count()
         total_chats = await db.total_chat_count()
-        
-        # 2. Files Count edukkurom (Optional - Venum na vechukalam)
         total_files = await Media.count_documents()
 
-        # 3. Text-a Format Panrom (Pazhaya text kooda Stats add panrom)
         stats_text = (
             f"\n\n<b>📊 𝐋𝐈𝐕𝐄 𝐒𝐓𝐀𝐓𝐒 📊</b>\n"
             f"<b>👤 Users:</b> {total_users}\n"
             f"<b>👥 Groups:</b> {total_chats}\n"
             f"<b>📂 Files:</b> {total_files}"
         )
-        
-        # Script la irukka Admin Text + Namma Stats Text
         final_text = script.ADMIN_TXT + stats_text
 
         buttons = [[
             InlineKeyboardButton('ʙᴀᴄᴋ', callback_data='help'),
             InlineKeyboardButton('⚡ Contact Admin', url='https://t.me/Tamilmovieslink_bot')
         ]]
-        
         reply_markup = InlineKeyboardMarkup(buttons)
-        
         await query.message.edit_text(
             text=final_text,
             reply_markup=reply_markup,
@@ -770,19 +757,24 @@ async def cb_handler(client: Client, query: CallbackQuery):
             await query.message.edit_reply_markup(reply_markup)
     await query.answer('@Goku_Stark')
 
-# 👇👇 NEW AUTO FILTER CODE (Paste This) 👇👇
+# 👇👇 MODIFIED AUTO FILTER CODE 👇👇
 
 async def auto_filter(client, msg, spoll=False):
     if not spoll:
         message = msg
         settings = await get_settings(message.chat.id)
+        
+        # 🟢 FIX: Setting None ah iruntha Default Settings Load Pannanum 🟢
+        if not settings:
+            settings = {"button": True, "botpm": False, "file_secure": False, "imdb": False, "spell_check": False, "template": IMDB_TEMPLATE, "welcome": False}
+
         if message.text.startswith("/"): return  # ignore commands
         if re.findall(r"((^\/|^,|^!|^\.|^[\U0001F600-\U000E007F]).*)", message.text):
             return
         if 2 < len(message.text) < 100:
             search = message.text
             
-            # 👇 SEARCHING ANIMATION (Loading Bar) 👇
+            # 👇 SEARCHING ANIMATION
             search_msg = await message.reply_text(
                 f"<b>🔍 Searching...</b>\n"
                 f"<code>[⬛⬛⬜⬜⬜⬜⬜⬜] 20%</code>"
@@ -793,21 +785,15 @@ async def auto_filter(client, msg, spoll=False):
                 f"<code>[⬛⬛⬛⬛⬛⬛⬛⬛] 100%</code>\n\n"
                 f"<i>Here is your result 👇</i>"
             )
-            # 👆 ANIMATION END 👆
             
             files, offset, total_results = await get_search_results(search.lower(), offset=0, filter=True)
             
             if not files:
-                # 👇 RESULTS ILLANA ENNA PANNANUM? 👇
-                
-                # 1. Spell Check ON la iruntha -> Google la thedu
                 if settings["spell_check"]:
                     await search_msg.edit(f"<b>❌ Not Found in DB...</b>\n<i>Checking Google for Spelling... 🌏</i>")
-                    await asyncio.sleep(0.5) # 0.5 Seconds wait pannum ⏳
-                    await search_msg.delete() # Udane Delete aagidum 🗑️
+                    await asyncio.sleep(0.5) 
+                    await search_msg.delete() 
                     return await advantage_spell_chok(client, msg)
-                
-                # 2. Spell Check OFF la iruntha -> "No Results" nu sollu
                 else:
                     await search_msg.edit(
                         f"<b>❌ No Results Found!</b>\n\n"
@@ -818,10 +804,13 @@ async def auto_filter(client, msg, spoll=False):
                     await search_msg.delete()
                     return
             else:
-                # Result kedaichiruchu, Loading msg delete pannidalam
                 await search_msg.delete() 
     else:
         settings = await get_settings(msg.message.chat.id)
+        # 🟢 FIX: Setting None Check in Callback 🟢
+        if not settings:
+             settings = {"button": True, "botpm": False, "file_secure": False, "imdb": False, "spell_check": False, "template": IMDB_TEMPLATE, "welcome": False}
+        
         message = msg.message.reply_to_message  # msg is CallbackQuery
         search, files, offset, total_results = spoll
 
@@ -880,7 +869,6 @@ async def auto_filter(client, msg, spoll=False):
         else:
             btn.append([InlineKeyboardButton(text="📃 1/1", callback_data="pages")])
             
-    # 👇 REQUEST BUTTON
     btn.append([InlineKeyboardButton("📝 Request Movie 📝", url="https://t.me/Tamilmovieslink_bot")])
     
     imdb = await get_poster(search, file=(files[0]).file_name) if settings["imdb"] else None
@@ -968,30 +956,29 @@ async def auto_filter(client, msg, spoll=False):
     if spoll:
         await msg.message.delete()
 
-# 👇 REPLACED SPELL CHECK LOGIC (Using Built-in Difflib) 👇
-
 async def advantage_spell_chok(client, msg):
     mv_id = msg.id
     mv_rqst = msg.text
     reqstr1 = msg.from_user.id if msg.from_user else 0
     reqstr = await client.get_users(reqstr1)
-    settings = await get_settings(msg.chat.id)
     
-    # 1. Clean the Query (Junk Remove)
+    # FIX: Group Settings check for Spell Check
+    settings = await get_settings(msg.chat.id)
+    if not settings:
+         settings = {"button": True, "botpm": False, "file_secure": False, "imdb": False, "spell_check": False, "template": IMDB_TEMPLATE, "welcome": False}
+
     query = re.sub(
         r"\b(pl(i|e)*?(s|z+|ease|se|ese|(e+)s(e)?)|((send|snd|giv(e)?|gib)(\sme)?)|movie(s)?|new|latest|br((o|u)h?)*|^h(e|a)?(l)*(o)*|mal(ayalam)?|t(h)?amil|file|that|find|und(o)*|kit(t(i|y)?)?o(w)?|thar(u)?(o)*w?|kittum(o)*|aya(k)*(um(o)*)?|full\smovie|any(one)|with\ssubtitle(s)?)",
         "", msg.text, flags=re.IGNORECASE)
     
     query = query.strip()
     
-    # IMDb/Google Search Query
     if query:
         search_query = query + " movie"
     else:
         search_query = msg.text
 
     try:
-        # 2. Try External Search (IMDb/Google)
         movies = await get_poster(search_query, bulk=True)
     except Exception as e:
         logger.exception(e)
@@ -999,35 +986,22 @@ async def advantage_spell_chok(client, msg):
 
     movielist = []
     
-    # 3. External Result iruntha eduthuko
     if movies:
         movielist += [movie.get('title') for movie in movies]
 
-    # 👇👇 NEW MAGIC: DATABASE MATCHING (Built-in) 👇👇
-    # IMDb fail aanalum, namma DB la irunthu kandupudipom!
-    
     if not movielist:
         try:
-            # "mester" -> First letter "m"
             first_char = query[0] if query else ""
-            
             if first_char:
-                # DB la "m" la start aagura files mattum edu (Limit 200 for Better Search)
                 cursor = Media.collection.find({"file_name": {"$regex": f"^{first_char}", "$options": "i"}}).limit(200)
                 db_files = await cursor.to_list(length=200)
-                
-                # File names mattum thaniya edu
                 db_names = [x['file_name'] for x in db_files]
-                
-                # Use Python's Difflib (Mester vs Master)
                 if db_names:
-                    # Cutoff 0.6 means 60% match iruntha pothum
                     matches = difflib.get_close_matches(query, db_names, n=5, cutoff=0.5)
                     movielist += matches
         except Exception as e:
             logger.error(f"Fuzzy Error: {e}")
 
-    # 4. Final Result Check
     if not movielist:
         reqst_gle = mv_rqst.replace(" ", "+")
         google_btn = [
@@ -1042,8 +1016,7 @@ async def advantage_spell_chok(client, msg):
         await k.delete()
         return
 
-    # 5. Duplicate Remove & Display Buttons
-    movielist = list(dict.fromkeys(movielist)) # Duplicates ali
+    movielist = list(dict.fromkeys(movielist)) 
     
     SPELL_CHECK[mv_id] = movielist
     
