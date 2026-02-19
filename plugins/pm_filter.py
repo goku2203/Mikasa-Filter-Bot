@@ -44,12 +44,12 @@ SPELL_CHECK = {}
 
 @Client.on_message((filters.group | filters.private) & filters.text)
 async def give_filter(client, message):
-    # NOTE: Bot Group la Admin ah illana message delete panna mudiyathu.
-    # Athu error aagama irukka try-except use panrom.
+    # 🟢 FIX 1: Message Delete Error Handling
+    # Bot Group Admin illana delete panna mudiyathu. So try-except podrom.
     try:
         await message.delete()
     except Exception as e:
-        pass # Admin illana paravalla, leave it.
+        pass # Delete aagalana paravalla, leave it.
 
     k = await manual_filters(client, message)
     if k == False:
@@ -80,8 +80,9 @@ async def next_page(bot, query):
     if not files:
         return
 
-    # FIX: Group Settings illana Crash aagakoodathu
+    # 🟢 FIX 2: Group Settings Check
     settings = await get_settings(query.message.chat.id)
+    # Settings illana Default Settings create pannu
     if not settings:
         settings = {"button": True, "botpm": False, "file_secure": False, "imdb": False, "spell_check": False, "template": IMDB_TEMPLATE, "welcome": False}
 
@@ -416,7 +417,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
         size = get_size(files.file_size)
         f_caption = files.caption
         
-        # FIX: Group Settings check
+        # 🟢 FIX 3: Group Settings Check for Files
         settings = await get_settings(query.message.chat.id)
         if not settings:
              settings = {"button": True, "botpm": False, "file_secure": False, "imdb": False, "spell_check": False, "template": IMDB_TEMPLATE, "welcome": False}
@@ -764,7 +765,7 @@ async def auto_filter(client, msg, spoll=False):
         message = msg
         settings = await get_settings(message.chat.id)
         
-        # 🟢 FIX: Setting None ah iruntha Default Settings Load Pannanum 🟢
+        # 🟢 FIX 4: Default Settings Load for Auto Filter
         if not settings:
             settings = {"button": True, "botpm": False, "file_secure": False, "imdb": False, "spell_check": False, "template": IMDB_TEMPLATE, "welcome": False}
 
@@ -807,7 +808,7 @@ async def auto_filter(client, msg, spoll=False):
                 await search_msg.delete() 
     else:
         settings = await get_settings(msg.message.chat.id)
-        # 🟢 FIX: Setting None Check in Callback 🟢
+        # 🟢 FIX 5: Setting None Check in Callback 🟢
         if not settings:
              settings = {"button": True, "botpm": False, "file_secure": False, "imdb": False, "spell_check": False, "template": IMDB_TEMPLATE, "welcome": False}
         
@@ -962,7 +963,7 @@ async def advantage_spell_chok(client, msg):
     reqstr1 = msg.from_user.id if msg.from_user else 0
     reqstr = await client.get_users(reqstr1)
     
-    # FIX: Group Settings check for Spell Check
+    # 🟢 FIX 6: Group Settings Check for Spell Check
     settings = await get_settings(msg.chat.id)
     if not settings:
          settings = {"button": True, "botpm": False, "file_secure": False, "imdb": False, "spell_check": False, "template": IMDB_TEMPLATE, "welcome": False}
