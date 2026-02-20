@@ -34,7 +34,7 @@ from pyrogram import utils as pyroutils
 pyroutils.MIN_CHAT_ID = -999999999999
 pyroutils.MIN_CHANNEL_ID = -100999999999999
 
-PORT_CODE = environ.get("PORT", "8080")
+PORT_CODE = int(environ.get("PORT", 8080))
 
 # 👇👇 DUMMY WEB SERVER CODE START 👇👇
 routes = webserver.RouteTableDef()
