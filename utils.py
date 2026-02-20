@@ -101,6 +101,25 @@ def list_to_str(k):
     else:
         return ' '.join(f'{elem}, ' for elem in k)
 
+# 👇 FIX: Added missing last_online function
+def last_online(from_user):
+    time = ""
+    if from_user.is_bot:
+        time += "🤖 Bot :("
+    elif from_user.status == enums.UserStatus.RECENTLY:
+        time += "Recently"
+    elif from_user.status == enums.UserStatus.LAST_WEEK:
+        time += "Within the last week"
+    elif from_user.status == enums.UserStatus.LAST_MONTH:
+        time += "Within the last month"
+    elif from_user.status == enums.UserStatus.LONG_AGO:
+        time += "A long time ago :("
+    elif from_user.status == enums.UserStatus.ONLINE:
+        time += "Currently Online"
+    elif from_user.status == enums.UserStatus.OFFLINE:
+        time += from_user.last_online_date.strftime("%a, %d %b %Y, %H:%M:%S")
+    return time
+
 # --- PARSER FUNCTIONS ---
 
 def remove_escapes(text: str) -> str:
@@ -202,7 +221,6 @@ async def get_shortlink(link):
 async def get_short(link):
     return await get_shortlink(link)
 
-# 👇 FIX: Changed argument to match commands.py exactly
 async def get_verify_link(user_id, file_id=None):
     if file_id:
         link = f"https://t.me/{temp.U_NAME}?start=verify_{user_id}_{file_id}"
