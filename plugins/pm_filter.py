@@ -39,7 +39,12 @@ async def give_filter(client, message):
     try:
         await message.delete()
     except Exception as e:
+        logger.info(f"Could not delete message: {e}")
         pass 
+
+    # Log for debugging
+    chat_type = "Private" if message.chat.type == enums.ChatType.PRIVATE else "Group"
+    logger.info(f"Filter triggered in {chat_type}: {message.text}")
 
     k = await manual_filters(client, message)
     if k == False:
