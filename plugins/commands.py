@@ -272,6 +272,7 @@ async def start(client, message):
                     "<b>✅ Verification Successful!</b>\n\n<i>File Uploading... Please wait...</i>", 
                     protect_content=True
                 )
+                await db.add_verified_user()
                 
                 asyncio.create_task(auto_delete_helper(v_msg, 10))
                 
