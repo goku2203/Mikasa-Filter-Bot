@@ -699,18 +699,6 @@ async def cb_handler(client: Client, query: CallbackQuery):
         )
     
     elif query.data == "admin":
-        total_users = await db.total_users_count()
-        total_chats = await db.total_chat_count()
-        total_files = await Media.count_documents()
-
-        stats_text = (
-            f"\n\n<b>📊 𝐋𝐈𝐕𝐄 𝐒𝐓𝐀𝐓𝐒 📊</b>\n"
-            f"<b>👤 Users:</b> {total_users}\n"
-            f"<b>👥 Groups:</b> {total_chats}\n"
-            f"<b>📂 Files:</b> {total_files}"
-        )
-        final_text = script.ADMIN_TXT + stats_text
-
         buttons = [[
             InlineKeyboardButton('ʙᴀᴄᴋ', callback_data='help'),
             InlineKeyboardButton('⚡ Contact Admin', url='https://t.me/Tamilmovieslink_bot')
