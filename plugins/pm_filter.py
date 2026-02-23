@@ -4,7 +4,7 @@ import asyncio
 import re
 import ast
 import math
-from pyrogram.errors.exceptions.bad_request_400 import MediaEmpty, PhotoInvalidDimensions, WebpageMediaEmpty, ButtonUrlInvalid
+from pyrogram.errors.exceptions.bad_request_400 import MediaEmpty, PhotoInvalidDimensions, WebpageMediaEmpty
 from Script import script
 import pyrogram
 from database.connections_mdb import active_connection, all_connections, delete_connection, if_active, make_active, \
@@ -26,25 +26,21 @@ from database.filters_mdb import (
 import logging
 import random
 from info import PICS
-import difflib
+import difflib # Itha Function kulla use panrom
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.ERROR)
 
 BUTTONS = {}
 SPELL_CHECK = {}
 
-@Client.on_message((filters.group | filters.private) & filters.text)
+
+@Client.on_message(filters.group | filters.private & filters.text & filters.incoming) 
 async def give_filter(client, message):
     try:
         await message.delete()
     except Exception as e:
-        logger.info(f"Could not delete message: {e}")
-        pass 
-
-    # Log for debugging
-    chat_type = "Private" if message.chat.type == enums.ChatType.PRIVATE else "Group"
-    logger.info(f"Filter triggered in {chat_type}: {message.text}")
+        logger.exception("Failed to delete message:", e)
 
     k = await manual_filters(client, message)
     if k == False:
@@ -76,8 +72,6 @@ async def next_page(bot, query):
         return
 
     settings = await get_settings(query.message.chat.id)
-    if not settings:
-        settings = {"button": True, "botpm": False, "file_secure": False, "imdb": False, "spell_check": False, "template": IMDB_TEMPLATE, "welcome": False}
 
     if HYPER_MODE:
         cap_lines = []
@@ -138,9 +132,9 @@ async def next_page(bot, query):
                 InlineKeyboardButton("NEXT ▶️", callback_data=f"next_{req}_{key}_{n_offset}")
             ]
         )
-
+# 👇 INTHA LINE AH INGA ADD PANNUNGA 👇
     btn.append([InlineKeyboardButton("📝 Request Movie 📝", url="https://t.me/Tamilmovieslink_bot")])
-    
+    # 👆 MELA IRUKKURATHA ADD PANNUNGA 👆
     try:
         if HYPER_MODE:
             await query.edit_message_text(
@@ -167,9 +161,9 @@ async def advantage_spoll_choker(bot, query):
         return await query.message.delete()
     movies = SPELL_CHECK.get(query.message.reply_to_message.id)
     if not movies:
-        return await query.answer(script.OLD_MES, show_alert=True)
+        return await query.answer(script.OLD_MES, show_alert=True)#script change
     movie = movies[(int(movie_))]
-    await query.answer(script.CHK_MOV_ALRT)
+    await query.answer(script.CHK_MOV_ALRT)#script change
     k = await manual_filters(bot, query.message, text=movie)
     if k == False:
         files, offset, total_results = await get_search_results(movie, offset=0, filter=True)
@@ -177,15 +171,17 @@ async def advantage_spoll_choker(bot, query):
             k = (movie, files, offset, total_results)
             await auto_filter(bot, query, k)
         else:
-            k = await query.message.edit(script.MOV_NT_FND)
+            k = await query.message.edit(script.MOV_NT_FND)#script change
             await asyncio.sleep(10)
             await k.delete()
 
 @Client.on_callback_query()
 async def cb_handler(client: Client, query: CallbackQuery):
+    # 1. Close Data
     if query.data == "close_data":
         await query.message.delete()
 
+    # 2. Premium Plans
     elif query.data == "premium_data":
         payment_link = "https://upi.pe/gokula8@ibl" 
         admin_link = "https://t.me/Screenshot_gk_bot"
@@ -222,6 +218,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
         )
         return await query.answer()
 
+    # 3. Delete All Confirm
     elif query.data == "delallconfirm":
         userid = query.from_user.id
         chat_type = query.message.chat.type
@@ -400,6 +397,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
             alert = alert.replace("\\n", "\n").replace("\\t", "\t")
             await query.answer(alert, show_alert=True)
 
+    # ERROR FIX: 'if' ah 'elif' ah maathiruken
     elif query.data.startswith("file"):
         ident, file_id = query.data.split("#")
         files_ = await get_file_details(file_id)
@@ -409,11 +407,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
         title = files.file_name
         size = get_size(files.file_size)
         f_caption = files.caption
-        
         settings = await get_settings(query.message.chat.id)
-        if not settings:
-             settings = {"button": True, "botpm": False, "file_secure": False, "imdb": False, "spell_check": False, "template": IMDB_TEMPLATE, "welcome": False}
-
         if CUSTOM_FILE_CAPTION:
             try:
                 f_caption = CUSTOM_FILE_CAPTION.format(file_name='' if title is None else title,
@@ -476,6 +470,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
     elif query.data == "pages":
         await query.answer()
 
+    # SPELL CHECK BUTTONS
     elif query.data == "esp":
         await query.answer(text=script.ENG_SPELL, show_alert="true")
     elif query.data == "msp":
@@ -485,10 +480,11 @@ async def cb_handler(client: Client, query: CallbackQuery):
     elif query.data == "tsp":
         await query.answer(text=script.TAM_SPELL, show_alert="true")
         
+    # ERROR FIX: 'start_data' add panniruken (BACK button work aaga)
     elif query.data == "start" or query.data == "start_data":
         buttons = [
             [
-                InlineKeyboardButton("➕ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ᴠɪʟʟᴀɢᴇ ➕", url=f"https://t.me/{temp.U_NAME}?startgroup=true")
+                InlineKeyboardButton("➕ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ᴠɪʟʟᴀɢᴇ ➕", url=f"http://t.me/{temp.U_NAME}?startgroup=true")
             ],
             [
                 InlineKeyboardButton("📜 ᴊᴜᴛsᴜ (ʜᴇʟᴘ)", callback_data="help"),
@@ -506,14 +502,19 @@ async def cb_handler(client: Client, query: CallbackQuery):
         
         reply_markup = InlineKeyboardMarkup(buttons)
         
+# 👇 TEXT FORMATTING (Safe Method)
         try:
+            # Script la 3 bracket {} iruntha ithu work aagum
             txt = script.START_TXT.format(query.from_user.mention, temp.U_NAME, temp.B_NAME)
         except:
+            # Script la 1 bracket {} iruntha ithu work aagum
             txt = script.START_TXT.format(query.from_user.mention)
 
+        # 👇 EDIT MEDIA (Ithu thaan mukkiyam)
+        # Ithu Premium image-a eduthutu, Random Start Photo-va vaikum
         await query.message.edit_media(
             media=InputMediaPhoto(
-                media=random.choice(PICS),
+                media=random.choice(PICS), # Random Photo Select aagum
                 caption=txt
             ),
             reply_markup=reply_markup
@@ -569,6 +570,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
             parse_mode=enums.ParseMode.HTML
         )
 
+    # ERROR FIX: 'manuelfilter' -> 'manual_filter'
     elif query.data == "manual_filter":
         buttons = [[
             InlineKeyboardButton('ʙᴀᴄᴋ', callback_data='help'),
@@ -594,6 +596,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
             parse_mode=enums.ParseMode.HTML
         )
 
+    # ERROR FIX: 'autofilter' -> 'auto_filter'
     elif query.data == "auto_filter":
         buttons = [[
             InlineKeyboardButton('ʙᴀᴄᴋ', callback_data='help'),
@@ -606,6 +609,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
             parse_mode=enums.ParseMode.HTML
         )
 
+    # ERROR FIX: 'coct' -> 'connection'
     elif query.data == "connection":
         buttons = [[
             InlineKeyboardButton('ʙᴀᴄᴋ', callback_data='help'),
@@ -618,6 +622,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
             parse_mode=enums.ParseMode.HTML
         )
 
+    # ERROR FIX: 'extra' -> 'extras'
     elif query.data == "extras":
         buttons = [[
             InlineKeyboardButton('ʙᴀᴄᴋ', callback_data='help'),
@@ -632,23 +637,31 @@ async def cb_handler(client: Client, query: CallbackQuery):
         )
     
     elif query.data == "admin":
+        # 1. Database la irunthu count edukkurom
         total_users = await db.total_users_count()
         total_chats = await db.total_chat_count()
+        
+        # 2. Files Count edukkurom (Optional - Venum na vechukalam)
         total_files = await Media.count_documents()
 
+        # 3. Text-a Format Panrom (Pazhaya text kooda Stats add panrom)
         stats_text = (
             f"\n\n<b>📊 𝐋𝐈𝐕𝐄 𝐒𝐓𝐀𝐓𝐒 📊</b>\n"
             f"<b>👤 Users:</b> {total_users}\n"
             f"<b>👥 Groups:</b> {total_chats}\n"
             f"<b>📂 Files:</b> {total_files}"
         )
+        
+        # Script la irukka Admin Text + Namma Stats Text
         final_text = script.ADMIN_TXT + stats_text
 
         buttons = [[
             InlineKeyboardButton('ʙᴀᴄᴋ', callback_data='help'),
             InlineKeyboardButton('⚡ Contact Admin', url='https://t.me/Tamilmovieslink_bot')
         ]]
+        
         reply_markup = InlineKeyboardMarkup(buttons)
+        
         await query.message.edit_text(
             text=final_text,
             reply_markup=reply_markup,
@@ -750,227 +763,228 @@ async def cb_handler(client: Client, query: CallbackQuery):
             await query.message.edit_reply_markup(reply_markup)
     await query.answer('@Goku_Stark')
 
+# 👇👇 NEW AUTO FILTER CODE (Paste This) 👇👇
+
 async def auto_filter(client, msg, spoll=False):
-    try:
-        if not spoll:
-            message = msg
-            settings = await get_settings(message.chat.id)
+    if not spoll:
+        message = msg
+        settings = await get_settings(message.chat.id)
+        if message.text.startswith("/"): return  # ignore commands
+        if re.findall(r"((^\/|^,|^!|^\.|^[\U0001F600-\U000E007F]).*)", message.text):
+            return
+        if 2 < len(message.text) < 100:
+            search = message.text
             
-            if not settings:
-                settings = {"button": True, "botpm": False, "file_secure": False, "imdb": False, "spell_check": False, "template": IMDB_TEMPLATE, "welcome": False}
-
-            if message.text.startswith("/"): return
-            if re.findall(r"((^\/|^,|^!|^\.|^[\U0001F600-\U000E007F]).*)", message.text):
-                return
-            if 2 < len(message.text) < 100:
-                search = message.text
-                
-                search_msg = await message.reply_text(
-                    f"<b>🔍 Searching...</b>\n"
-                    f"<code>[⬛⬛⬜⬜⬜⬜⬜⬜] 20%</code>"
-                )
-                await asyncio.sleep(0.5)
-                await search_msg.edit(
-                    f"<b>✅ Completed!</b>\n"
-                    f"<code>[⬛⬛⬛⬛⬛⬛⬛⬛] 100%</code>\n\n"
-                    f"<i>Here is your result 👇</i>"
-                )
-                
-                files, offset, total_results = await get_search_results(search.lower(), offset=0, filter=True)
-                
-                if not files:
-                    if settings["spell_check"]:
-                        await search_msg.edit(f"<b>❌ Not Found in DB...</b>\n<i>Checking Google for Spelling... 🌏</i>")
-                        await asyncio.sleep(0.5) 
-                        await search_msg.delete() 
-                        return await advantage_spell_chok(client, msg)
-                    else:
-                        await search_msg.edit(
-                            f"<b>❌ No Results Found!</b>\n\n"
-                            f"<i>Couldn't find '<b>{search}</b>' in my database.</i>\n"
-                            f"Please check the spelling or Request to Admin."
-                        )
-                        await asyncio.sleep(10)
-                        await search_msg.delete()
-                        return
-                else:
-                    await search_msg.delete() 
-        else:
-            settings = await get_settings(msg.message.chat.id)
-            if not settings:
-                 settings = {"button": True, "botpm": False, "file_secure": False, "imdb": False, "spell_check": False, "template": IMDB_TEMPLATE, "welcome": False}
-            
-            message = msg.message.reply_to_message
-            search, files, offset, total_results = spoll
-
-        pre = 'filep' if settings['file_secure'] else 'file'
-
-        if HYPER_MODE:
-            cap_lines = []
-            for file in files:
-                file_link = f"https://t.me/{temp.U_NAME}?start={pre}_{file.file_id}"
-                cap_lines.append(f"📁 {get_size(file.file_size)} - [{file.file_name}]({file_link})")
-            cap_text = "\n".join(cap_lines)
-
-            btn = []
-            if offset != "":
-                key = f"{message.chat.id}-{message.id}"
-                BUTTONS[key] = search
-                req = message.from_user.id if message.from_user else 0
-                btn.append([
-                    InlineKeyboardButton(text=f"📃 1/{math.ceil(int(total_results) / 10)}", callback_data="pages"),
-                    InlineKeyboardButton(text="NEXT ▶️", callback_data=f"next_{req}_{key}_{offset}")
-                ])
-            else:
-                btn.append([InlineKeyboardButton(text="📃 1/1", callback_data="pages")])
-        else:
-            if settings["button"]:
-                btn = [
-                    [
-                        InlineKeyboardButton(
-                            text=f"📂[{get_size(file.file_size)}]--{file.file_name}", callback_data=f'{pre}#{file.file_id}'
-                        ),
-                    ]
-                    for file in files
-                ]
-            else:
-                btn = [
-                    [
-                        InlineKeyboardButton(
-                            text=f"{file.file_name}",
-                            callback_data=f'{pre}#{file.file_id}',
-                        ),
-                        InlineKeyboardButton(
-                            text=f"{get_size(file.file_size)}",
-                            callback_data=f'{pre}#{file.file_id}',
-                        ),
-                    ]
-                    for file in files
-                ]
-            if offset != "":
-                key = f"{message.chat.id}-{message.id}"
-                BUTTONS[key] = search
-                req = message.from_user.id if message.from_user else 0
-                btn.append([
-                    InlineKeyboardButton(text=f"📃 1/{math.ceil(int(total_results) / 10)}", callback_data="pages"),
-                    InlineKeyboardButton(text="NEXT ▶️", callback_data=f"next_{req}_{key}_{offset}")
-                ])
-            else:
-                btn.append([InlineKeyboardButton(text="📃 1/1", callback_data="pages")])
-                
-        btn.append([InlineKeyboardButton("📝 Request Movie 📝", url="https://t.me/Tamilmovieslink_bot")])
-        
-        imdb = await get_poster(search, file=(files[0]).file_name) if settings["imdb"] else None
-        TEMPLATE = settings['template']
-        if imdb:
-            cap = TEMPLATE.format(
-                query=search,
-                title=imdb['title'],
-                votes=imdb['votes'],
-                aka=imdb["aka"],
-                seasons=imdb["seasons"],
-                box_office=imdb['box_office'],
-                localized_title=imdb['localized_title'],
-                kind=imdb['kind'],
-                imdb_id=imdb["imdb_id"],
-                cast=imdb["cast"],
-                runtime=imdb["runtime"],
-                countries=imdb["countries"],
-                certificates=imdb["certificates"],
-                languages=imdb["languages"],
-                director=imdb["director"],
-                writer=imdb["writer"],
-                producer=imdb["producer"],
-                composer=imdb["composer"],
-                cinematographer=imdb["cinematographer"],
-                music_team=imdb["music_team"],
-                distributors=imdb["distributors"],
-                release_date=imdb['release_date'],
-                year=imdb['year'],
-                genres=imdb['genres'],
-                poster=imdb['poster'],
-                plot=imdb['plot'],
-                rating=imdb['rating'],
-                url=imdb['url'],
-                **locals()
+            # 👇 SEARCHING ANIMATION (Loading Bar) 👇
+            search_msg = await message.reply_text(
+                f"<b>🔍 Searching...</b>\n"
+                f"<code>[⬛⬛⬜⬜⬜⬜⬜⬜] 20%</code>"
             )
-        else:
-            mention = message.from_user.mention if message.from_user else "User"
-            cap = script.RESULT_TXT.format(mention=mention, query=search)
-
-        if imdb and imdb.get('poster'):
-            try:
-                if not spoll: await search_msg.delete()
+            await asyncio.sleep(0.5)
+            await search_msg.edit(
+                f"<b>✅ Completed!</b>\n"
+                f"<code>[⬛⬛⬛⬛⬛⬛⬛⬛] 100%</code>\n\n"
+                f"<i>Here is your result 👇</i>"
+            )
+            # 👆 ANIMATION END 👆
+            
+            files, offset, total_results = await get_search_results(search.lower(), offset=0, filter=True)
+            
+            if not files:
+                # 👇 RESULTS ILLANA ENNA PANNANUM? 👇
                 
-                delauto = await message.reply_photo(
-                    photo=imdb.get('poster'),
-                    caption=cap[:1024],
-                    reply_markup=InlineKeyboardMarkup(btn)
-                )
-                await asyncio.sleep(60)
-                await delauto.delete()
-            except (MediaEmpty, PhotoInvalidDimensions, WebpageMediaEmpty):
-                if not spoll: await search_msg.delete()
-                pic = imdb.get('poster')
-                poster = pic.replace('.jpg', "._V1_UX360.jpg")
-                delau = await message.reply_photo(
-                    photo=poster,
-                    caption=cap[:1024],
-                    reply_markup=InlineKeyboardMarkup(btn)
-                )
-                await asyncio.sleep(60)
-                await delau.delete()
-            except Exception as e:
-                if not spoll: await search_msg.delete()
-                audel = await message.reply_text(cap, reply_markup=InlineKeyboardMarkup(btn))
-                await asyncio.sleep(60)
-                await audel.delete()
+                # 1. Spell Check ON la iruntha -> Google la thedu
+                if settings["spell_check"]:
+                    await search_msg.edit(f"<b>❌ Not Found in DB...</b>\n<i>Checking Google for Spelling... 🌏</i>")
+                    await asyncio.sleep(0.5) # 0.5 Seconds wait pannum ⏳
+                    await search_msg.delete() # Udane Delete aagidum 🗑️
+                    return await advantage_spell_chok(client, msg)
+                
+                # 2. Spell Check OFF la iruntha -> "No Results" nu sollu
+                else:
+                    await search_msg.edit(
+                        f"<b>❌ No Results Found!</b>\n\n"
+                        f"<i>Couldn't find '<b>{search}</b>' in my database.</i>\n"
+                        f"Please check the spelling or Request to Admin."
+                    )
+                    await asyncio.sleep(10)
+                    await search_msg.delete()
+                    return
+            else:
+                # Result kedaichiruchu, Loading msg delete pannidalam
+                await search_msg.delete() 
+    else:
+        settings = await get_settings(msg.message.chat.id)
+        message = msg.message.reply_to_message  # msg is CallbackQuery
+        search, files, offset, total_results = spoll
+
+    pre = 'filep' if settings['file_secure'] else 'file'
+
+    if HYPER_MODE:
+        cap_lines = []
+        for file in files:
+            file_link = f"https://t.me/{temp.U_NAME}?start={pre}_{file.file_id}"
+            cap_lines.append(f"📁 {get_size(file.file_size)} - [{file.file_name}]({file_link})")
+        cap_text = "\n".join(cap_lines)
+
+        btn = []
+        if offset != "":
+            key = f"{message.chat.id}-{message.id}"
+            BUTTONS[key] = search
+            req = message.from_user.id if message.from_user else 0
+            btn.append([
+                InlineKeyboardButton(text=f"📃 1/{math.ceil(int(total_results) / 10)}", callback_data="pages"),
+                InlineKeyboardButton(text="NEXT ▶️", callback_data=f"next_{req}_{key}_{offset}")
+            ])
         else:
+            btn.append([InlineKeyboardButton(text="📃 1/1", callback_data="pages")])
+    else:
+        if settings["button"]:
+            btn = [
+                [
+                    InlineKeyboardButton(
+                        text=f"📂[{get_size(file.file_size)}]--{file.file_name}", callback_data=f'{pre}#{file.file_id}'
+                    ),
+                ]
+                for file in files
+            ]
+        else:
+            btn = [
+                [
+                    InlineKeyboardButton(
+                        text=f"{file.file_name}",
+                        callback_data=f'{pre}#{file.file_id}',
+                    ),
+                    InlineKeyboardButton(
+                        text=f"{get_size(file.file_size)}",
+                        callback_data=f'{pre}#{file.file_id}',
+                    ),
+                ]
+                for file in files
+            ]
+        if offset != "":
+            key = f"{message.chat.id}-{message.id}"
+            BUTTONS[key] = search
+            req = message.from_user.id if message.from_user else 0
+            btn.append([
+                InlineKeyboardButton(text=f"📃 1/{math.ceil(int(total_results) / 10)}", callback_data="pages"),
+                InlineKeyboardButton(text="NEXT ▶️", callback_data=f"next_{req}_{key}_{offset}")
+            ])
+        else:
+            btn.append([InlineKeyboardButton(text="📃 1/1", callback_data="pages")])
+            
+    # 👇 REQUEST BUTTON
+    btn.append([InlineKeyboardButton("📝 Request Movie 📝", url="https://t.me/Tamilmovieslink_bot")])
+    
+    imdb = await get_poster(search, file=(files[0]).file_name) if settings["imdb"] else None
+    TEMPLATE = settings['template']
+    if imdb:
+        cap = TEMPLATE.format(
+            query=search,
+            title=imdb['title'],
+            votes=imdb['votes'],
+            aka=imdb["aka"],
+            seasons=imdb["seasons"],
+            box_office=imdb['box_office'],
+            localized_title=imdb['localized_title'],
+            kind=imdb['kind'],
+            imdb_id=imdb["imdb_id"],
+            cast=imdb["cast"],
+            runtime=imdb["runtime"],
+            countries=imdb["countries"],
+            certificates=imdb["certificates"],
+            languages=imdb["languages"],
+            director=imdb["director"],
+            writer=imdb["writer"],
+            producer=imdb["producer"],
+            composer=imdb["composer"],
+            cinematographer=imdb["cinematographer"],
+            music_team=imdb["music_team"],
+            distributors=imdb["distributors"],
+            release_date=imdb['release_date'],
+            year=imdb['year'],
+            genres=imdb['genres'],
+            poster=imdb['poster'],
+            plot=imdb['plot'],
+            rating=imdb['rating'],
+            url=imdb['url'],
+            **locals()
+        )
+    else:
+        mention = message.from_user.mention if message.from_user else "User"
+        cap = script.RESULT_TXT.format(mention=mention, query=search)
+
+    if imdb and imdb.get('poster'):
+        try:
             if not spoll: await search_msg.delete()
             
-            if HYPER_MODE:
-                autodel = await message.reply_text(
-                    cap_text,
-                    reply_markup=InlineKeyboardMarkup(btn),
-                    parse_mode=enums.ParseMode.MARKDOWN,
-                    disable_web_page_preview=True
-                )
-            else:
-                autodel = await message.reply_text(cap, reply_markup=InlineKeyboardMarkup(btn))
-
+            delauto = await message.reply_photo(
+                photo=imdb.get('poster'),
+                caption=cap[:1024],
+                reply_markup=InlineKeyboardMarkup(btn)
+            )
             await asyncio.sleep(60)
-            await autodel.delete()
+            await delauto.delete()
+        except (MediaEmpty, PhotoInvalidDimensions, WebpageMediaEmpty):
+            if not spoll: await search_msg.delete()
+            pic = imdb.get('poster')
+            poster = pic.replace('.jpg', "._V1_UX360.jpg")
+            delau = await message.reply_photo(
+                photo=poster,
+                caption=cap[:1024],
+                reply_markup=InlineKeyboardMarkup(btn)
+            )
+            await asyncio.sleep(60)
+            await delau.delete()
+        except Exception as e:
+            if not spoll: await search_msg.delete()
+            logger.exception(e)
+            audel = await message.reply_text(cap, reply_markup=InlineKeyboardMarkup(btn))
+            await asyncio.sleep(60)
+            await audel.delete()
+    else:
+        if not spoll: await search_msg.delete()
+        
+        if HYPER_MODE:
+            autodel = await message.reply_text(
+                cap_text,
+                reply_markup=InlineKeyboardMarkup(btn),
+                parse_mode=enums.ParseMode.MARKDOWN,
+                disable_web_page_preview=True
+            )
+        else:
+            autodel = await message.reply_text(cap, reply_markup=InlineKeyboardMarkup(btn))
 
-        if spoll:
-            await msg.message.delete()
-            
-    except ButtonUrlInvalid:
-        logger.error("BUTTON URL INVALID ERROR: Kaila podra link sariya illa, check pannunga.")
-    except Exception as final_error:
-        logger.exception(f"CRITICAL ERROR IN AUTO_FILTER: {final_error}")
+        await asyncio.sleep(60)
+        await autodel.delete()
+
+    if spoll:
+        await msg.message.delete()
+
+# 👇 REPLACED SPELL CHECK LOGIC (Using Built-in Difflib) 👇
 
 async def advantage_spell_chok(client, msg):
     mv_id = msg.id
     mv_rqst = msg.text
     reqstr1 = msg.from_user.id if msg.from_user else 0
     reqstr = await client.get_users(reqstr1)
-    
     settings = await get_settings(msg.chat.id)
-    if not settings:
-         settings = {"button": True, "botpm": False, "file_secure": False, "imdb": False, "spell_check": False, "template": IMDB_TEMPLATE, "welcome": False}
-
+    
+    # 1. Clean the Query (Junk Remove)
     query = re.sub(
         r"\b(pl(i|e)*?(s|z+|ease|se|ese|(e+)s(e)?)|((send|snd|giv(e)?|gib)(\sme)?)|movie(s)?|new|latest|br((o|u)h?)*|^h(e|a)?(l)*(o)*|mal(ayalam)?|t(h)?amil|file|that|find|und(o)*|kit(t(i|y)?)?o(w)?|thar(u)?(o)*w?|kittum(o)*|aya(k)*(um(o)*)?|full\smovie|any(one)|with\ssubtitle(s)?)",
         "", msg.text, flags=re.IGNORECASE)
     
     query = query.strip()
     
+    # IMDb/Google Search Query
     if query:
         search_query = query + " movie"
     else:
         search_query = msg.text
 
     try:
+        # 2. Try External Search (IMDb/Google)
         movies = await get_poster(search_query, bulk=True)
     except Exception as e:
         logger.exception(e)
@@ -978,22 +992,35 @@ async def advantage_spell_chok(client, msg):
 
     movielist = []
     
+    # 3. External Result iruntha eduthuko
     if movies:
         movielist += [movie.get('title') for movie in movies]
 
+    # 👇👇 NEW MAGIC: DATABASE MATCHING (Built-in) 👇👇
+    # IMDb fail aanalum, namma DB la irunthu kandupudipom!
+    
     if not movielist:
         try:
+            # "mester" -> First letter "m"
             first_char = query[0] if query else ""
+            
             if first_char:
+                # DB la "m" la start aagura files mattum edu (Limit 200 for Better Search)
                 cursor = Media.collection.find({"file_name": {"$regex": f"^{first_char}", "$options": "i"}}).limit(200)
                 db_files = await cursor.to_list(length=200)
+                
+                # File names mattum thaniya edu
                 db_names = [x['file_name'] for x in db_files]
+                
+                # Use Python's Difflib (Mester vs Master)
                 if db_names:
+                    # Cutoff 0.6 means 60% match iruntha pothum
                     matches = difflib.get_close_matches(query, db_names, n=5, cutoff=0.5)
                     movielist += matches
         except Exception as e:
             logger.error(f"Fuzzy Error: {e}")
 
+    # 4. Final Result Check
     if not movielist:
         reqst_gle = mv_rqst.replace(" ", "+")
         google_btn = [
@@ -1008,7 +1035,8 @@ async def advantage_spell_chok(client, msg):
         await k.delete()
         return
 
-    movielist = list(dict.fromkeys(movielist)) 
+    # 5. Duplicate Remove & Display Buttons
+    movielist = list(dict.fromkeys(movielist)) # Duplicates ali
     
     SPELL_CHECK[mv_id] = movielist
     
