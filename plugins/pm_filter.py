@@ -521,7 +521,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
         )
         await query.answer('@Goku_Stark')
 
-    elif query.data == "help":
+elif query.data == "help":
         buttons = [
             [
                 InlineKeyboardButton("🛠️ ᴍᴀɴᴜᴀʟ ғɪʟᴛᴇʀ", callback_data="manual_filter"),
@@ -539,10 +539,76 @@ async def cb_handler(client: Client, query: CallbackQuery):
                 InlineKeyboardButton("⚡ ᴄᴏɴᴛᴀᴄᴛ ᴀᴅᴍɪɴ ⚡", url="https://t.me/Tamilmovieslink_bot")
             ]
         ]
+        
+        # 👇 SECRET OWNER BUTTON (Admin ku mattum thaan theriyum) 👇
+        if query.from_user.id in ADMINS:
+            buttons.append([InlineKeyboardButton("👑 𝐎𝐰𝐧𝐞𝐫 𝐏𝐚𝐧𝐞𝐥 (𝐋𝐢𝐯𝐞 𝐒𝐭𝐚𝐭𝐬) 👑", callback_data="owner_panel")])
+        # 👆 --------------------------------------------------- 👆
+
         reply_markup = InlineKeyboardMarkup(buttons)
         await query.message.edit_text(
             text=script.HELP_TXT.format(query.from_user.mention),
             reply_markup=reply_markup,
+            parse_mode=enums.ParseMode.HTML
+        )
+# 👇 PUTHU OWNER PANEL FUNCTION 👇
+    elif query.data == "owner_panel":
+        # Security Check
+        if query.from_user.id not in ADMINS:
+            return await query.answer("Kuthu Vangiruva! Ithu Owner ku mattum thaan! 😠", show_alert=True)
+            
+        import psutil
+        from utils import get_size
+        
+        await query.answer("Fetching Live Stats... ⏳")
+        
+        # Database Stats
+        total_users = await db.total_users_count()
+        total_chats = await db.total_chat_count()
+        total_files = await Media.count_documents()
+        
+        # Database Free Space Logic
+        monsize = await db.get_db_size()
+        free_db = 536870912 - monsize  # 512MB MongoDB Free Tier
+        db_percent = round((monsize / 536870912) * 100, 2)
+        
+        # Hardware / Performance Stats
+        cpu = psutil.cpu_percent(interval=0.5)
+        ram = psutil.virtual_memory().percent
+        disk = psutil.disk_usage('/').percent
+        
+        # Monthly Verified Users (Temporary logic placeholder)
+        verified_users = total_users 
+        
+        text = (
+            "<b>👑 <u>𝐎𝐖𝐍𝐄𝐑 𝐂𝐎𝐍𝐓𝐑𝐎𝐋 𝐏𝐀𝐍𝐄𝐋</u> 👑</b>\n\n"
+            f"<i>Hi {query.from_user.mention}! Ithu unnoda secret dashboard. 😎</i>\n\n"
+            "<b>📊 <u>𝐋𝐢𝐯𝐞 𝐁𝐨𝐭 𝐒𝐭𝐚𝐭𝐬</u>:</b>\n"
+            f"👤 <b>Total Users:</b> <code>{total_users}</code>\n"
+            f"👥 <b>Total Groups:</b> <code>{total_chats}</code>\n"
+            f"📂 <b>Total Files:</b> <code>{total_files}</code>\n"
+            f"✅ <b>Verified Users:</b> <code>~ {verified_users}</code>\n\n"
+            "<b>🖥️ <u>𝐒𝐞𝐫𝐯𝐞𝐫 & 𝐇𝐚𝐫𝐝𝐰𝐚𝐫𝐞</u>:</b>\n"
+            f"⚡ <b>CPU Usage:</b> <code>{cpu}%</code>\n"
+            f"💽 <b>RAM Usage:</b> <code>{ram}%</code>\n"
+            f"💿 <b>Storage:</b> <code>{disk}%</code>\n\n"
+            "<b>💾 <u>𝐃𝐚𝐭𝐚𝐛𝐚𝐬𝐞 𝐂𝐚𝐩𝐚𝐜𝐢𝐭𝐲</u>:</b>\n"
+            f"📊 <b>Used:</b> <code>{db_percent}%</code>\n"
+            f"🆓 <b>Free:</b> <code>{get_size(free_db)}</code>"
+        )
+        
+        buttons = [
+            [
+                InlineKeyboardButton("♻️ Refresh Stats", callback_data="owner_panel")
+            ],
+            [
+                InlineKeyboardButton("🔙 Back to Help", callback_data="help")
+            ]
+        ]
+        
+        await query.message.edit_text(
+            text=text,
+            reply_markup=InlineKeyboardMarkup(buttons),
             parse_mode=enums.ParseMode.HTML
         )
 
