@@ -864,20 +864,43 @@ async def auto_filter(client, msg, spoll=False):
                                 print(f"Missing Log Error: {e}")
                     # --- MISSING LOG CODE END ---
                     
+                    # 👇 PUDHU STYLE ANIMATION 👇
                     if settings["spell_check"]:
-                        await search_msg.edit(f"<b>❌ Not Found in DB...</b>\n<i>Checking Google for Spelling... 🌏</i>")
-                        await asyncio.sleep(0.5) 
+                        # Step 1: Animation 1
+                        await search_msg.edit("<b>⚠️ Analyzing Database...</b>\n<code>[======>   ] 60%</code>")
+                        await asyncio.sleep(0.5)
+                        
+                        # Step 2: Animation 2 (Error)
+                        await search_msg.edit("<b>🔴 ERROR 404: Movie Not Found!</b>\n<code>[==========] 100%</code>")
+                        await asyncio.sleep(0.8)
+                        
+                        # Step 3: Cool Tanglish Dialogue
+                        await search_msg.edit(
+                            f"<b>🤖 System Alert:</b>\n"
+                            f"<i>En kitta '<b>{search}</b>' illa thalaiva! 🥺\n"
+                            f"Wait... Google kitta spelling thedi paakuren... 🕵️‍♂️🌍</i>"
+                        )
+                        await asyncio.sleep(1.5) 
                         await search_msg.delete() 
                         return await advantage_spell_chok(client, msg)
+                        
                     else:
+                        # Oruvela spell check off la iruntha intha mass message + Button varum
+                        req_btn = [[InlineKeyboardButton("📝 Request Movie", url="https://t.me/Tamilmovieslink_bot")]]
                         await search_msg.edit(
-                            f"<b>❌ No Results Found!</b>\n\n"
-                            f"<i>Couldn't find '<b>{search}</b>' in my database.</i>\n"
-                            f"Please check the spelling or Request to Admin."
+                            f"<b>🚫 MISSION FAILED!</b>\n\n"
+                            f"🎬 <b>Movie:</b> <code>{search}</code>\n"
+                            f"🤖 <b>Status:</b> <i>En kitta intha padam illa thalaiva! 🥺</i>\n\n"
+                            f"💡 <b>Tips:</b>\n"
+                            f"👉 Spelling correct-a check pannu.\n"
+                            f"👉 Year illama verum pera mattum potu thedu.\n"
+                            f"👉 Illana keezha irukka button click panni Admin kitta kelu!",
+                            reply_markup=InlineKeyboardMarkup(req_btn)
                         )
-                        await asyncio.sleep(10)
+                        await asyncio.sleep(15)
                         await search_msg.delete()
                         return
+                    # 👆 PUDHU STYLE ANIMATION END 👆
                 else:
                     await search_msg.delete() 
         else:
