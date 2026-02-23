@@ -578,7 +578,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
         disk = psutil.disk_usage('/').percent
         
         # Monthly Verified Users (Temporary logic placeholder)
-        verified_users = total_users 
+        verified_users = await db.get_verified_count() 
         
         text = (
             "<b>👑 <u>𝐎𝐖𝐍𝐄𝐑 𝐂𝐎𝐍𝐓𝐑𝐎𝐋 𝐏𝐀𝐍𝐄𝐋</u> 👑</b>\n\n"
