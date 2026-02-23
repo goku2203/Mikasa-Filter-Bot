@@ -36,46 +36,49 @@ def get_clean_name(name):
     if not name: return ""
     clean = name.lower()
     
+    # --- SUPER LOGIC: Year-ku munnadi ulla text-a mattum title ah edukkalam ---
+    # Ex: "Master 2021 Tamil 1080p" -> "Master " mattum edukkum
+    year_match = re.search(r'\b(19|20)\d{2}\b', clean)
+    if year_match:
+        clean = clean[:year_match.start()] 
+    
     # 1. Remove File Extension
     clean = re.sub(r'\.(mkv|mp4|avi|flv|webm)$', '', clean)
     
-    # 2. Remove Year
-    clean = re.sub(r'\b(19|20)\d{2}\b', '', clean)
-    
-    # 3. Remove Channel Names & Junk
+    # 2. Remove Channel Names & Junk
     junk_list = [
         "@goku_stark", "goku stark", "trollmaa", "@skmain1", "skmain1", 
-        "backup - tamil movies", "gokustark", "@gokustark", "www.", ".com"
+        "backup - tamil movies", "gokustark", "@gokustark", "www.", ".com", "t.me", "telegram"
     ]
     for junk in junk_list:
         clean = clean.replace(junk, "")
 
-    # 4. Remove Brackets with content
+    # 3. Remove Brackets with content
     clean = re.sub(r'[\[\(\{].*?[\]\)\}]', '', clean)
 
-    # 5. Remove Sizes
+    # 4. Remove Sizes (700mb, 1.4gb etc)
     clean = re.sub(r'\b\d{3,4}mb\b', '', clean)
     clean = re.sub(r'\b\d+(\.\d+)?gb\b', '', clean)
 
-    # 6. Remove Quality & Format Junk
+    # 5. EXTRA JUNK WORDS (Nee sonna PreDVD, DDP2 ellam inga add panniyachu)
     junk_words = [
         "2160p", "4k", "1080p", "720p", "480p", "360p", 
         "hdrip", "hq", "hd", "bd", "bluray", "blu-ray", "br-rip", "brrip", "web-dl", "web",
         "dvdscr", "dvd", "cam", "hdcam", "proper", "true", "avc", "remastered", 
         "uncut", "extended", "dual", "multi", "audio", "esubs", "esub", "x264", "x265", "hevc",
-        "dd5.1", "dd+", "aac", "ac3"
+        "dd5.1", "dd+", "aac", "ac3", "predvd", "pre-dvd", "hqpredvd", "hq-predvd", "camrip", 
+        "print", "ddp2", "ddp", "v2", "v1", "amzn", "hotstar", "zee5", "netflix", "org", "subs"
     ]
     
     for word in junk_words:
         clean = re.sub(r'\b' + re.escape(word) + r'\b', '', clean)
 
-    # 7. Remove Languages from Title
-    langs = ["tamil", "telugu", "hindi", "english", "tam", "tel", "hin", "eng", "malayalam", "kannada"]
+    # 6. Remove Languages from Title
+    langs = ["tamil", "telugu", "hindi", "english", "tam", "tel", "hin", "eng", "malayalam", "kannada", "hqaud"]
     for lang in langs:
         clean = re.sub(r'\b' + re.escape(lang) + r'\b', '', clean)
 
-    # 8. Final Polish (FIXED HERE)
-    # Hyphen is now escaped (\-) to prevent range error
+    # 7. Final Polish (Remove special characters and extra spaces)
     clean = re.sub(r'[\[\]\(\)\{\}\-_./@|:+]', ' ', clean)
     clean = re.sub(r'\s+', ' ', clean).strip()
     
