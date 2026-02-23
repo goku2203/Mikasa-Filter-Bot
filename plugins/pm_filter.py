@@ -857,7 +857,8 @@ async def auto_filter(client, msg, spoll=False):
                         
                         log_msg = (
                             f"⚠️ **Missing Movie Detected!**\n\n"
-                            f"🔍 **Query:** {search}\n"
+                            
+                            f"🔍 **Query:** `{search}`\n"
                             f"👤 **User:** {user_mention}\n"
                             f"📁 **Group:** {message.chat.title}\n"
                             f"🆔 **User ID:** `{user_id}`\n\n"
