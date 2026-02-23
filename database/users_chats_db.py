@@ -2,6 +2,7 @@
 #  @MrMNTG @MusammilN
 #please give credits https://github.com/MN-BOTS/ShobanaFilterBot
 import motor.motor_asyncio
+import datetime # Ithu namma smart counter-kaga add panniyachu
 from info import DATABASE_NAME, DATABASE_URI, IMDB, IMDB_TEMPLATE, MELCOW_NEW_USERS, P_TTI_SHOW_OFF, SINGLE_BUTTON, SPELL_CHECK_REPLY, PROTECT_CONTENT
 
 #  @MrMNTG @MusammilN
@@ -161,6 +162,27 @@ class Database:
     async def get_db_size(self):
         return (await self.db.command("dbstats"))['dataSize']
 
+    # ==========================================
+    # 👇 SMART COUNTER CODE ADDED HERE 👇
+    # ==========================================
+    async def add_verified_user(self):
+        # Intha masam enna nu kandupudikkum (Ex: 2026-02)
+        current_month = datetime.datetime.now().strftime("%Y-%m")
+        # Database-la antha masathukku count +1 pannum
+        await self.config.update_one(
+            {"_id": "smart_counter"},
+            {"$inc": {f"verified_{current_month}": 1}},
+            upsert=True
+        )
+
+    async def get_verified_count(self):
+        # Intha masam ethana peru verify pannanga nu count edukkum
+        current_month = datetime.datetime.now().strftime("%Y-%m")
+        stats = await self.config.find_one({"_id": "smart_counter"})
+        if stats:
+            return stats.get(f"verified_{current_month}", 0)
+        return 0
+    # ==========================================
 
 db = Database(DATABASE_URI, DATABASE_NAME)
 
