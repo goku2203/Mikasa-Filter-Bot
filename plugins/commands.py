@@ -22,28 +22,34 @@ logger = logging.getLogger(__name__)
 BATCH_FILES = {}
 AUTO_DELETE_SECONDS = 15
 
+# 🟢 FIX 1: Cache dict for Invite Links (To prevent FloodWait and Lag)
+INVITE_LINK_CACHE = {}
+
 # Helper function to create buttons
 async def create_file_buttons(client, sent_message):
     buttons = []
     if sent_message.chat.username:
         message_link = f"https://t.me/{sent_message.chat.username}/{sent_message.id}"
+        buttons.append([InlineKeyboardButton("🔗 View File", url=message_link)])
+        return InlineKeyboardMarkup(buttons)
     else:
         channel_id = str(sent_message.chat.id).replace('-100', '')
         message_link = f"https://t.me/c/{channel_id}/{sent_message.id}"
     
     try:
-        chat = await client.get_chat(sent_message.chat.id)
-        if chat.username:
-            invite_link = f"https://t.me/{chat.username}"
-        else:
-            invite_link = (await client.create_chat_invite_link(
-                sent_message.chat.id,
-                name=f"FileAccess-{datetime.now().timestamp()}",
-                expire_date=datetime.now() + timedelta(minutes=10),
-                member_limit=1
-            )).invite_link
+        # 🟢 FIX 2: Check cache before creating a new link
+        chat_id = sent_message.chat.id
+        if chat_id not in INVITE_LINK_CACHE:
+            chat = await client.get_chat(chat_id)
+            if chat.username:
+                INVITE_LINK_CACHE[chat_id] = f"https://t.me/{chat.username}"
+            else:
+                invite = await client.create_chat_invite_link(chat_id)
+                INVITE_LINK_CACHE[chat_id] = invite.invite_link
         
-        buttons.append([InlineKeyboardButton("📢 Join Channel", url=invite_link)])
+        invite_link = INVITE_LINK_CACHE[chat_id]
+        
+        buttons.append([InlineKeyboardButton("📢 Join Channel to View", url=invite_link)])
         buttons.append([InlineKeyboardButton("🔗 View File", url=message_link)])
     except Exception as e:
         logger.error(f"Error creating invite: {e}")
@@ -122,6 +128,9 @@ async def send_file_to_user(client, user_id, file_id, protect_content_flag, file
 
 @Client.on_callback_query(filters.regex(r'^checksubp#') | filters.regex(r'^checksub#'))
 async def checksub_callback(client, callback_query):
+    # 🟢 FIX 3: Instantly stop the "Loading" circle on button click
+    await callback_query.answer("Sending File... ⏳", show_alert=False)
+    
     data = callback_query.data
     pre, file_id = data.split('#', 1)
     user_id = callback_query.from_user.id
@@ -144,7 +153,6 @@ async def checksub_callback(client, callback_query):
             await callback_query.message.delete()
         except Exception as e:
             logger.error(f"File send error in callback: {e}")
-            await callback_query.answer("Failed to send file. Please try again later.", show_alert=True)
     else:
         links = await create_invite_links(client)
         btn = [[InlineKeyboardButton("🤖 Join Updates Channel", url=url)] for url in links.values()]
@@ -197,19 +205,13 @@ async def start(client, message):
         ]
         reply_markup = InlineKeyboardMarkup(buttons)
         
-        # 1. Naruto Style Loading Effect
         m = await message.reply_text(
             text="<b>🌀 𝐆𝐚𝐭𝐡𝐞𝐫𝐢𝐧𝐠 𝐂𝐡𝐚𝐤𝐫𝐚... ⏳</b>",
             parse_mode=enums.ParseMode.HTML
         )
-
-        # 2. Wait for 1.5 seconds
         await asyncio.sleep(1.5)
-
-        # 3. Loading text delete
         await m.delete()
 
-        # 4. Main Bot Entry with Photo
         await message.reply_photo(
             photo=random.choice(PICS),
             caption=script.START_TXT.format(message.from_user.mention, temp.U_NAME, temp.B_NAME),
@@ -364,7 +366,6 @@ async def start(client, message):
                     )
             except FloodWait as e:
                 await asyncio.sleep(e.x)
-                logger.warning(f"Floodwait of {e.x} sec.")
                 await client.send_cached_media(
                     chat_id=message.from_user.id,
                     file_id=msg.get("file_id"),
