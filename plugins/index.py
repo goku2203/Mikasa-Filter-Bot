@@ -83,7 +83,7 @@ async def media(client, message):
         logger.error(f"❌ Auto Index Error: {e}")
 
 # ====================================================
-# 👇👇 BELOW IS YOUR OLD MANUAL INDEXING CODE 👇👇
+# 👇👇 MANUAL INDEXING CODE (Optimized for No Lag) 👇👇
 # ====================================================
 
 @Client.on_callback_query(filters.regex(r'^index'))
@@ -103,13 +103,15 @@ async def index_files(bot, query):
         return await query.answer('Wait until previous process complete.', show_alert=True)
     msg = query.message
 
+    # 🟢 FIX 1: Answer Query Immediately to Stop Loading Animation
     await query.answer('Processing...⏳', show_alert=True)
+    
     if int(from_user) not in ADMINS:
         await bot.send_message(int(from_user),
                                f'Your Submission for indexing {chat} has been accepted by our moderators and will be added soon.',
                                reply_to_message_id=int(lst_msg_id))
     await msg.edit(
-        "Starting Indexing",
+        "Starting Indexing... Please Wait.",
         reply_markup=InlineKeyboardMarkup(
             [[InlineKeyboardButton('Cancel', callback_data='index_cancel')]]
         )
@@ -118,7 +120,9 @@ async def index_files(bot, query):
         chat = int(chat)
     except:
         chat = chat
-    await index_files_to_db(int(lst_msg_id), chat, msg, bot)
+        
+    # 🟢 FIX 2: Background Task - Ithu bot-a block pannama background la run aaga vekkum
+    asyncio.create_task(index_files_to_db(int(lst_msg_id), chat, msg, bot))
 
 
 @Client.on_message((filters.forwarded | (filters.regex("(https://)?(t\.me/|telegram\.me/|telegram\.dog/)(c/)?(\d+|[a-zA-Z_0-9]+)/(\d+)$")) & filters.text ) & filters.private & filters.incoming)
@@ -218,47 +222,49 @@ async def index_files_to_db(lst_msg_id, chat, msg, bot):
             current = temp.CURRENT
             temp.CANCEL = False
             
-            # Fetching messages in chunks for better performance
-            CHUNK_SIZE = 200 # Fetch 200 messages at a time
+            # 🟢 FIX 3: Reduced chunk size to prevent Memory Crashes (RAM problems)
+            CHUNK_SIZE = 100 
             
             while current <= lst_msg_id:
                 if temp.CANCEL:
                     await msg.edit(f"Successfully Cancelled!!\n\nSaved <code>{total_files}</code> files to dataBase!\nDuplicate Files Skipped: <code>{duplicate}</code>\nDeleted Messages Skipped: <code>{deleted}</code>\nNon-Media messages skipped: <code>{no_media + unsupported}</code>(Unsupported Media - `{unsupported}` )\nErrors Occurred: <code>{errors}</code>")
                     break
                 
-                # Calculate the range of message IDs to fetch in this chunk
                 end_msg_id = min(current + CHUNK_SIZE - 1, lst_msg_id)
                 msg_ids_to_fetch = list(range(current, end_msg_id + 1))
                 
                 try:
-                    # Fetching a chunk of messages
                     messages = await bot.get_messages(chat, msg_ids_to_fetch)
                 except FloodWait as e:
-                    # Handle flood wait gracefully
                     logger.warning(f"FloodWait encountered: sleeping for {e.value} seconds.")
                     await asyncio.sleep(e.value)
-                    continue # Retry the same chunk
+                    continue 
                 except Exception as fetch_error:
                     logger.error(f"Error fetching chunk: {fetch_error}")
                     errors += len(msg_ids_to_fetch)
                     current = end_msg_id + 1
+                    # Breathing space for the bot
+                    await asyncio.sleep(0.5) 
                     continue
                 
                 for message in messages:
                     if temp.CANCEL:
-                        break # Break inner loop if cancelled
+                        break 
                         
+                    # 🟢 FIX 4: YIELD - Ithu bot freeze aagura prechanaiya 100% thadukkum!
+                    await asyncio.sleep(0.01)
+                    
                     current_msg_id = message.id if message and not message.empty else 0
                     
-                    if current % 100 == 0: # Update progress every 100 messages to reduce edit rate
+                    if current % 100 == 0: 
                         can = [[InlineKeyboardButton('Cancel', callback_data='index_cancel')]]
                         reply = InlineKeyboardMarkup(can)
                         try:
                              await msg.edit_text(
-                                 text=f"Total messages fetched: <code>{current}</code>\nTotal messages saved: <code>{total_files}</code>\nDuplicate Files Skipped: <code>{duplicate}</code>\nDeleted Messages Skipped: <code>{deleted}</code>\nNon-Media messages skipped: <code>{no_media + unsupported}</code>(Unsupported Media - `{unsupported}` )\nErrors Occurred: <code>{errors}</code>",
+                                 text=f"Total messages fetched: <code>{current}</code>\nTotal messages saved: <code>{total_files}</code>\nDuplicate Files Skipped: <code>{duplicate}</code>\nDeleted Messages Skipped: <code>{deleted}</code>\nNon-Media messages skipped: <code>{no_media + unsupported}</code>\nErrors Occurred: <code>{errors}</code>",
                                  reply_markup=reply)
                         except MessageNotModified:
-                            pass # Ignore if text is the same
+                            pass 
                         except FloodWait as fw:
                              await asyncio.sleep(fw.value)
                     
@@ -288,12 +294,14 @@ async def index_files_to_db(lst_msg_id, chat, msg, bot):
                     elif vnay == 2:
                         errors += 1
                 
-                # Move to the next chunk
                 current = end_msg_id + 1
+                
+                # 🟢 FIX 5: Extra Breathing space - Start command lag varama irukka
+                await asyncio.sleep(0.5)
 
         except Exception as e:
             logger.exception(e)
             await msg.edit(f'Error: {e}')
         else:
             if not temp.CANCEL:
-                 await msg.edit(f'Succesfully saved <code>{total_files}</code> to dataBase!\nDuplicate Files Skipped: <code>{duplicate}</code>\nDeleted Messages Skipped: <code>{deleted}</code>\nNon-Media messages skipped: <code>{no_media + unsupported}</code>(Unsupported Media - `{unsupported}` )\nErrors Occurred: <code>{errors}</code>')
+                 await msg.edit(f'Succesfully saved <code>{total_files}</code> to dataBase!\nDuplicate Files Skipped: <code>{duplicate}</code>\nDeleted Messages Skipped: <code>{deleted}</code>\nNon-Media messages skipped: <code>{no_media + unsupported}</code>\nErrors Occurred: <code>{errors}</code>')
