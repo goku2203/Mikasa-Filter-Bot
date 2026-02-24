@@ -932,7 +932,7 @@ async def auto_filter(client, msg, spoll=False):
             else:
                 btn.append([InlineKeyboardButton(text="📃 1/1", callback_data="pages")])
 
-            else:
+        else:
             # 👇 🔥 INGA THAAN LOADING FIX PANNIRUKOM (callback pathila direct URL) 🔥 👇
             if settings["button"]:
                 btn = [
