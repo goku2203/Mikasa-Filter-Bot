@@ -66,6 +66,14 @@ async def auto_delete_file(client, message, delay):
 
 async def send_file_to_user(client, user_id, file_id, protect_content_flag, file_name=None, file_size=None, file_caption=None):
     try:
+# 👇 PUDHU REPLACE LOGIC INGA START AAGUTHU 👇
+        import re
+        # "goku stark" illana "@goku stark" epdi irunthalum atha "@goku_stark" nu mathidum
+        if file_name:
+            file_name = re.sub(r'@?goku\s+stark', '@goku_stark', file_name, flags=re.IGNORECASE)
+        if file_caption:
+            file_caption = re.sub(r'@?goku\s+stark', '@goku_stark', file_caption, flags=re.IGNORECASE)
+        # 👆 --------------------------------------- 👆
         caption = file_caption if file_caption else file_name
         if CUSTOM_FILE_CAPTION:
             try:
