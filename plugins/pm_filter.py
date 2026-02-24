@@ -40,6 +40,12 @@ MISSING_LOG_CHANNEL = -1003555146843
 LOG_COOLDOWN = 600
 RECENT_REQUESTS = {}
 
+# 👇 🔥 SUPER FIX: GOKU STARK NAME CLEANER 🔥 👇
+def fix_goku_name(name):
+    if not name: return ""
+    return re.sub(r'@?goku[\s\-_]*stark', '@goku_stark', name, flags=re.IGNORECASE)
+# 👆 --------------------------------------- 👆
+
 @Client.on_message((filters.group | filters.private) & filters.text)
 async def give_filter(client, message):
     try:
@@ -84,31 +90,32 @@ async def next_page(bot, query):
         cap_lines = []
         for file in files:
             file_link = f"https://t.me/{temp.U_NAME}?start=file_{file.file_id}"
-            cap_lines.append(f"📁 {get_size(file.file_size)} - [{file.file_name}]({file_link})")
+            disp_name = fix_goku_name(file.file_name) # Fix applied here
+            cap_lines.append(f"📁 {get_size(file.file_size)} - [{disp_name}]({file_link})")
         cap_text = "\n".join(cap_lines)
         btn = []
     else:
         if settings['button']:
-            btn = [
-                [
+            btn = []
+            for file in files:
+                disp_name = fix_goku_name(file.file_name) # Fix applied here
+                btn.append([
                     InlineKeyboardButton(
-                        text=f"📂[{get_size(file.file_size)}] ➵ {file.file_name}", callback_data=f'files#{file.file_id}'
-                    ),
-                ]
-                for file in files
-            ]
+                        text=f"📂[{get_size(file.file_size)}] ➵ {disp_name}", callback_data=f'files#{file.file_id}'
+                    )
+                ])
         else:
-            btn = [
-                [
+            btn = []
+            for file in files:
+                disp_name = fix_goku_name(file.file_name) # Fix applied here
+                btn.append([
                     InlineKeyboardButton(
-                        text=f"{file.file_name}", callback_data=f'files#{file.file_id}'
+                        text=f"{disp_name}", callback_data=f'files#{file.file_id}'
                     ),
                     InlineKeyboardButton(
                         text=f"{get_size(file.file_size)}", callback_data=f'files_#{file.file_id}'
-                    ),
-                ]
-                for file in files
-            ]
+                    )
+                ])
 
     if 0 < offset <= 10:
         off_set = 0
@@ -407,7 +414,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
         if not files_:
             return await query.answer('No such file exist.')
         files = files_[0]
-        title = files.file_name
+        title = fix_goku_name(files.file_name) # Fix applied here
         size = get_size(files.file_size)
         f_caption = files.caption
         
@@ -424,7 +431,9 @@ async def cb_handler(client: Client, query: CallbackQuery):
                 logger.exception(e)
             f_caption = f_caption
         if f_caption is None:
-            f_caption = f"{files.file_name}"
+            f_caption = f"{title}"
+            
+        f_caption = fix_goku_name(f_caption) # Fix applied here
 
         try:
             if not await is_subscribed(query.from_user.id, client):
@@ -453,7 +462,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
         if not files_:
             return await query.answer('No such file exist.')
         files = files_[0]
-        title = files.file_name
+        title = fix_goku_name(files.file_name) # Fix applied here
         size = get_size(files.file_size)
         f_caption = files.caption
         if CUSTOM_FILE_CAPTION:
@@ -466,6 +475,9 @@ async def cb_handler(client: Client, query: CallbackQuery):
                 f_caption = f_caption
         if f_caption is None:
             f_caption = f"{title}"
+            
+        f_caption = fix_goku_name(f_caption) # Fix applied here
+        
         await query.answer()
         await client.send_cached_media(
             chat_id=query.from_user.id,
@@ -540,10 +552,8 @@ async def cb_handler(client: Client, query: CallbackQuery):
             ]
         ]
         
-        # 👇 SECRET OWNER BUTTON (Admin ku mattum thaan theriyum) 👇
         if query.from_user.id in ADMINS:
             buttons.append([InlineKeyboardButton("👑 𝐎𝐰𝐧𝐞𝐫 𝐏𝐚𝐧𝐞𝐥 (𝐋𝐢𝐯𝐞 𝐒𝐭𝐚𝐭𝐬) 👑", callback_data="owner_panel")])
-        # 👆 --------------------------------------------------- 👆
 
         reply_markup = InlineKeyboardMarkup(buttons)
         await query.message.edit_text(
@@ -551,9 +561,8 @@ async def cb_handler(client: Client, query: CallbackQuery):
             reply_markup=reply_markup,
             parse_mode=enums.ParseMode.HTML
         )
-# 👇 PUTHU OWNER PANEL FUNCTION 👇
+
     elif query.data == "owner_panel":
-        # Security Check
         if query.from_user.id not in ADMINS:
             return await query.answer("Kuthu Vangiruva! Ithu Owner ku mattum thaan! 😠", show_alert=True)
             
@@ -562,22 +571,18 @@ async def cb_handler(client: Client, query: CallbackQuery):
         
         await query.answer("Fetching Live Stats... ⏳")
         
-        # Database Stats
         total_users = await db.total_users_count()
         total_chats = await db.total_chat_count()
         total_files = await Media.count_documents()
         
-        # Database Free Space Logic
         monsize = await db.get_db_size()
-        free_db = 536870912 - monsize  # 512MB MongoDB Free Tier
+        free_db = 536870912 - monsize
         db_percent = round((monsize / 536870912) * 100, 2)
         
-        # Hardware / Performance Stats
         cpu = psutil.cpu_percent(interval=0.5)
         ram = psutil.virtual_memory().percent
         disk = psutil.disk_usage('/').percent
         
-        # Monthly Verified Users (Temporary logic placeholder)
         verified_users = await db.get_verified_count() 
         
         text = (
@@ -598,12 +603,8 @@ async def cb_handler(client: Client, query: CallbackQuery):
         )
         
         buttons = [
-            [
-                InlineKeyboardButton("♻️ Refresh Stats", callback_data="owner_panel")
-            ],
-            [
-                InlineKeyboardButton("🔙 Back to Help", callback_data="help")
-            ]
+            [InlineKeyboardButton("♻️ Refresh Stats", callback_data="owner_panel")],
+            [InlineKeyboardButton("🔙 Back to Help", callback_data="help")]
         ]
         
         await query.message.edit_text(
@@ -705,10 +706,11 @@ async def cb_handler(client: Client, query: CallbackQuery):
         ]]
         reply_markup = InlineKeyboardMarkup(buttons)
         await query.message.edit_text(
-            text=final_text,
+            text=script.ADMIN_TXT,
             reply_markup=reply_markup,
             parse_mode=enums.ParseMode.HTML
         )
+
     elif query.data == "stats":
         buttons = [[
             InlineKeyboardButton('ʙᴀᴄᴋ', callback_data='help'),
@@ -768,37 +770,28 @@ async def cb_handler(client: Client, query: CallbackQuery):
         if settings is not None:
             buttons = [
                 [
-                    InlineKeyboardButton('Filter Button',
-                                         callback_data=f'setgs#button#{settings["button"]}#{str(grp_id)}'),
-                    InlineKeyboardButton('Single' if settings["button"] else 'Double',
-                                         callback_data=f'setgs#button#{settings["button"]}#{str(grp_id)}')
+                    InlineKeyboardButton('Filter Button', callback_data=f'setgs#button#{settings["button"]}#{str(grp_id)}'),
+                    InlineKeyboardButton('Single' if settings["button"] else 'Double', callback_data=f'setgs#button#{settings["button"]}#{str(grp_id)}')
                 ],
                 [
                     InlineKeyboardButton('Bot PM', callback_data=f'setgs#botpm#{settings["botpm"]}#{str(grp_id)}'),
-                    InlineKeyboardButton('✅ Yes' if settings["botpm"] else '❌ No',
-                                         callback_data=f'setgs#botpm#{settings["botpm"]}#{str(grp_id)}')
+                    InlineKeyboardButton('✅ Yes' if settings["botpm"] else '❌ No', callback_data=f'setgs#botpm#{settings["botpm"]}#{str(grp_id)}')
                 ],
                 [
-                    InlineKeyboardButton('File Secure',
-                                         callback_data=f'setgs#file_secure#{settings["file_secure"]}#{str(grp_id)}'),
-                    InlineKeyboardButton('✅ Yes' if settings["file_secure"] else '❌ No',
-                                         callback_data=f'setgs#file_secure#{settings["file_secure"]}#{str(grp_id)}')
+                    InlineKeyboardButton('File Secure', callback_data=f'setgs#file_secure#{settings["file_secure"]}#{str(grp_id)}'),
+                    InlineKeyboardButton('✅ Yes' if settings["file_secure"] else '❌ No', callback_data=f'setgs#file_secure#{settings["file_secure"]}#{str(grp_id)}')
                 ],
                 [
                     InlineKeyboardButton('IMDB', callback_data=f'setgs#imdb#{settings["imdb"]}#{str(grp_id)}'),
-                    InlineKeyboardButton('✅ Yes' if settings["imdb"] else '❌ No',
-                                         callback_data=f'setgs#imdb#{settings["imdb"]}#{str(grp_id)}')
+                    InlineKeyboardButton('✅ Yes' if settings["imdb"] else '❌ No', callback_data=f'setgs#imdb#{settings["imdb"]}#{str(grp_id)}')
                 ],
                 [
-                    InlineKeyboardButton('Spell Check',
-                                         callback_data=f'setgs#spell_check#{settings["spell_check"]}#{str(grp_id)}'),
-                    InlineKeyboardButton('✅ Yes' if settings["spell_check"] else '❌ No',
-                                         callback_data=f'setgs#spell_check#{settings["spell_check"]}#{str(grp_id)}')
+                    InlineKeyboardButton('Spell Check', callback_data=f'setgs#spell_check#{settings["spell_check"]}#{str(grp_id)}'),
+                    InlineKeyboardButton('✅ Yes' if settings["spell_check"] else '❌ No', callback_data=f'setgs#spell_check#{settings["spell_check"]}#{str(grp_id)}')
                 ],
                 [
                     InlineKeyboardButton('Welcome', callback_data=f'setgs#welcome#{settings["welcome"]}#{str(grp_id)}'),
-                    InlineKeyboardButton('✅ Yes' if settings["welcome"] else '❌ No',
-                                         callback_data=f'setgs#welcome#{settings["welcome"]}#{str(grp_id)}')
+                    InlineKeyboardButton('✅ Yes' if settings["welcome"] else '❌ No', callback_data=f'setgs#welcome#{settings["welcome"]}#{str(grp_id)}')
                 ]
             ]
             reply_markup = InlineKeyboardMarkup(buttons)
@@ -834,7 +827,6 @@ async def auto_filter(client, msg, spoll=False):
                 files, offset, total_results = await get_search_results(search.lower(), offset=0, filter=True)
                 
                 if not files:
-                    # --- MISSING LOG CODE ADDED HERE ---
                     clean_query = search.lower()
                     current_time = time.time()
                     
@@ -845,7 +837,6 @@ async def auto_filter(client, msg, spoll=False):
                         
                         log_msg = (
                             f"⚠️ **Missing Movie Detected!**\n\n"
-                            
                             f"🔍 **Query:** `{search}`\n"
                             f"👤 **User:** {user_mention}\n"
                             f"📁 **Group:** {message.chat.title}\n"
@@ -862,19 +853,14 @@ async def auto_filter(client, msg, spoll=False):
                                 )
                             except Exception as e:
                                 print(f"Missing Log Error: {e}")
-                    # --- MISSING LOG CODE END ---
                     
-                    # 👇 PUDHU STYLE ANIMATION 👇
                     if settings["spell_check"]:
-                        # Step 1: Animation 1
                         await search_msg.edit("<b>⚠️ Analyzing Database...</b>\n<code>[======>   ] 60%</code>")
                         await asyncio.sleep(0.5)
                         
-                        # Step 2: Animation 2 (Error)
                         await search_msg.edit("<b>🔴 ERROR 404: Movie Not Found!</b>\n<code>[==========] 100%</code>")
                         await asyncio.sleep(0.8)
                         
-                        # Step 3: Cool Tanglish Dialogue
                         await search_msg.edit(
                             f"<b>🤖 System Alert:</b>\n"
                             f"<i>En kitta '<b>{search}</b>' illa thalaiva! 🥺\n"
@@ -885,7 +871,6 @@ async def auto_filter(client, msg, spoll=False):
                         return await advantage_spell_chok(client, msg)
                         
                     else:
-                        # Oruvela spell check off la iruntha intha mass message + Button varum
                         req_btn = [[InlineKeyboardButton("📝 Request Movie", url="https://t.me/Tamilmovieslink_bot")]]
                         await search_msg.edit(
                             f"<b>🚫 MISSION FAILED!</b>\n\n"
@@ -900,7 +885,6 @@ async def auto_filter(client, msg, spoll=False):
                         await asyncio.sleep(15)
                         await search_msg.delete()
                         return
-                    # 👆 PUDHU STYLE ANIMATION END 👆
                 else:
                     await search_msg.delete() 
         else:
@@ -916,8 +900,9 @@ async def auto_filter(client, msg, spoll=False):
         if HYPER_MODE:
             cap_lines = []
             for file in files:
+                disp_name = fix_goku_name(file.file_name) # Fix applied here
                 file_link = f"https://t.me/{temp.U_NAME}?start={pre}_{file.file_id}"
-                cap_lines.append(f"📁 {get_size(file.file_size)} - [{file.file_name}]({file_link})")
+                cap_lines.append(f"📁 {get_size(file.file_size)} - [{disp_name}]({file_link})")
             cap_text = "\n".join(cap_lines)
 
             btn = []
@@ -933,32 +918,31 @@ async def auto_filter(client, msg, spoll=False):
                 btn.append([InlineKeyboardButton(text="📃 1/1", callback_data="pages")])
 
         else:
-            # 👇 🔥 INGA THAAN LOADING FIX PANNIRUKOM (callback pathila direct URL) 🔥 👇
             if settings["button"]:
-                btn = [
-                    [
+                btn = []
+                for file in files:
+                    disp_name = fix_goku_name(file.file_name) # Fix applied here
+                    btn.append([
                         InlineKeyboardButton(
-                            text=f"📂[{get_size(file.file_size)}]--{file.file_name}", 
+                            text=f"📂[{get_size(file.file_size)}]--{disp_name}", 
                             url=f"https://t.me/{temp.U_NAME}?start={pre}_{file.file_id}"
-                        ),
-                    ]
-                    for file in files
-                ]
+                        )
+                    ])
             else:
-                btn = [
-                    [
+                btn = []
+                for file in files:
+                    disp_name = fix_goku_name(file.file_name) # Fix applied here
+                    btn.append([
                         InlineKeyboardButton(
-                            text=f"{file.file_name}",
+                            text=f"{disp_name}",
                             url=f"https://t.me/{temp.U_NAME}?start={pre}_{file.file_id}"
                         ),
                         InlineKeyboardButton(
                             text=f"{get_size(file.file_size)}",
                             url=f"https://t.me/{temp.U_NAME}?start={pre}_{file.file_id}"
                         ),
-                    ]
-                    for file in files
-                ]
-            # 👆 🔥 FIX END 🔥 👆
+                    ])
+                    
             if offset != "":
                 key = f"{message.chat.id}-{message.id}"
                 BUTTONS[key] = search
