@@ -205,7 +205,6 @@ async def set_skip_number(bot, message):
     else:
         await message.reply("Give me a skip number")
 
-
 async def index_files_to_db(lst_msg_id, chat, msg, bot):
     total_files = 0
     duplicate = 0
@@ -213,45 +212,88 @@ async def index_files_to_db(lst_msg_id, chat, msg, bot):
     deleted = 0
     no_media = 0
     unsupported = 0
+
     async with lock:
         try:
             current = temp.CURRENT
             temp.CANCEL = False
-            async for message in bot.iter_messages(chat, lst_msg_id, temp.CURRENT):
+            
+            # Fetching messages in chunks for better performance
+            CHUNK_SIZE = 200 # Fetch 200 messages at a time
+            
+            while current <= lst_msg_id:
                 if temp.CANCEL:
                     await msg.edit(f"Successfully Cancelled!!\n\nSaved <code>{total_files}</code> files to dataBase!\nDuplicate Files Skipped: <code>{duplicate}</code>\nDeleted Messages Skipped: <code>{deleted}</code>\nNon-Media messages skipped: <code>{no_media + unsupported}</code>(Unsupported Media - `{unsupported}` )\nErrors Occurred: <code>{errors}</code>")
                     break
-                current += 1
-                if current % 80 == 0:
-                    can = [[InlineKeyboardButton('Cancel', callback_data='index_cancel')]]
-                    reply = InlineKeyboardMarkup(can)
-                    await msg.edit_text(
-                        text=f"Total messages fetched: <code>{current}</code>\nTotal messages saved: <code>{total_files}</code>\nDuplicate Files Skipped: <code>{duplicate}</code>\nDeleted Messages Skipped: <code>{deleted}</code>\nNon-Media messages skipped: <code>{no_media + unsupported}</code>(Unsupported Media - `{unsupported}` )\nErrors Occurred: <code>{errors}</code>",
-                        reply_markup=reply)
-                if message.empty:
-                    deleted += 1
+                
+                # Calculate the range of message IDs to fetch in this chunk
+                end_msg_id = min(current + CHUNK_SIZE - 1, lst_msg_id)
+                msg_ids_to_fetch = list(range(current, end_msg_id + 1))
+                
+                try:
+                    # Fetching a chunk of messages
+                    messages = await bot.get_messages(chat, msg_ids_to_fetch)
+                except FloodWait as e:
+                    # Handle flood wait gracefully
+                    logger.warning(f"FloodWait encountered: sleeping for {e.value} seconds.")
+                    await asyncio.sleep(e.value)
+                    continue # Retry the same chunk
+                except Exception as fetch_error:
+                    logger.error(f"Error fetching chunk: {fetch_error}")
+                    errors += len(msg_ids_to_fetch)
+                    current = end_msg_id + 1
                     continue
-                elif not message.media:
-                    no_media += 1
-                    continue
-                elif message.media not in [enums.MessageMediaType.VIDEO, enums.MessageMediaType.AUDIO, enums.MessageMediaType.DOCUMENT]:
-                    unsupported += 1
-                    continue
-                media = getattr(message, message.media.value, None)
-                if not media:
-                    unsupported += 1
-                    continue
-                media.file_type = message.media.value
-                media.caption = message.caption
-                aynav, vnay = await save_file(media)
-                if aynav:
-                    total_files += 1
-                elif vnay == 0:
-                    duplicate += 1
-                elif vnay == 2:
-                    errors += 1
+                
+                for message in messages:
+                    if temp.CANCEL:
+                        break # Break inner loop if cancelled
+                        
+                    current_msg_id = message.id if message and not message.empty else 0
+                    
+                    if current % 100 == 0: # Update progress every 100 messages to reduce edit rate
+                        can = [[InlineKeyboardButton('Cancel', callback_data='index_cancel')]]
+                        reply = InlineKeyboardMarkup(can)
+                        try:
+                             await msg.edit_text(
+                                 text=f"Total messages fetched: <code>{current}</code>\nTotal messages saved: <code>{total_files}</code>\nDuplicate Files Skipped: <code>{duplicate}</code>\nDeleted Messages Skipped: <code>{deleted}</code>\nNon-Media messages skipped: <code>{no_media + unsupported}</code>(Unsupported Media - `{unsupported}` )\nErrors Occurred: <code>{errors}</code>",
+                                 reply_markup=reply)
+                        except MessageNotModified:
+                            pass # Ignore if text is the same
+                        except FloodWait as fw:
+                             await asyncio.sleep(fw.value)
+                    
+                    if message is None or message.empty:
+                        deleted += 1
+                        continue
+                    elif not message.media:
+                        no_media += 1
+                        continue
+                    elif message.media not in [enums.MessageMediaType.VIDEO, enums.MessageMediaType.AUDIO, enums.MessageMediaType.DOCUMENT]:
+                        unsupported += 1
+                        continue
+                    
+                    media = getattr(message, message.media.value, None)
+                    if not media:
+                        unsupported += 1
+                        continue
+                        
+                    media.file_type = message.media.value
+                    media.caption = message.caption
+                    
+                    aynav, vnay = await save_file(media)
+                    if aynav:
+                        total_files += 1
+                    elif vnay == 0:
+                        duplicate += 1
+                    elif vnay == 2:
+                        errors += 1
+                
+                # Move to the next chunk
+                current = end_msg_id + 1
+
         except Exception as e:
             logger.exception(e)
             await msg.edit(f'Error: {e}')
         else:
-            await msg.edit(f'Succesfully saved <code>{total_files}</code> to dataBase!\nDuplicate Files Skipped: <code>{duplicate}</code>\nDeleted Messages Skipped: <code>{deleted}</code>\nNon-Media messages skipped: <code>{no_media + unsupported}</code>(Unsupported Media - `{unsupported}` )\nErrors Occurred: <code>{errors}</code>')
+            if not temp.CANCEL:
+                 await msg.edit(f'Succesfully saved <code>{total_files}</code> to dataBase!\nDuplicate Files Skipped: <code>{duplicate}</code>\nDeleted Messages Skipped: <code>{deleted}</code>\nNon-Media messages skipped: <code>{no_media + unsupported}</code>(Unsupported Media - `{unsupported}` )\nErrors Occurred: <code>{errors}</code>')
